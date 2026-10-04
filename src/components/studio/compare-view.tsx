@@ -4,7 +4,7 @@ import { useStudio } from "@/lib/jobs";
 import { identityLabel } from "@/lib/identify";
 import type { CardIdentity, CropEngine } from "@/lib/types";
 
-function IdentityChips({
+export function IdentityChips({
   identity,
   cropped,
   cropEngine,
@@ -57,9 +57,9 @@ function IdentityChips({
           OCR
         </Badge>
       ) : null}
-      {identity && identity.confidence > 0 ? (
+      {identity?.ocr?.confidence != null ? (
         <span className="font-mono text-[10px] text-muted tabular-nums">
-          {Math.round(identity.confidence * 100)}% id
+          OCR score {Math.round(identity.ocr.confidence)} / 100
         </span>
       ) : null}
     </div>

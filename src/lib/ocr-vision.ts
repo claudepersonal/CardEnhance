@@ -40,7 +40,7 @@ function coerceYear(value: unknown, rawText: string): number | null {
 function titleCase(value: string) {
   return value
     .toLowerCase()
-    .replace(/\b([a-z])/g, (m) => m.toUpperCase())
+    .replace(/(^|[^\p{L}])(\p{L})/gu, (_match, boundary: string, letter: string) => boundary + letter.toUpperCase())
     .replace(/\b(Ud|Aew|Wwe|Nfl|Nba|Mlb|Nhl|Tcg|Mtg)\b/g, (m) => m.toUpperCase());
 }
 

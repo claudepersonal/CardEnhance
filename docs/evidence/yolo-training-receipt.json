@@ -1,0 +1,44 @@
+{
+  "counts": {
+    "train": 66,
+    "val": 18
+  },
+  "duplicates_removed": 0,
+  "label_provenance": "repository_heuristic_polygons",
+  "validation_scope": "development label agreement; not independent human annotations",
+  "epochs_requested": 30,
+  "epochs_completed": 30,
+  "imgsz": 640,
+  "device": "cpu",
+  "seed": 42,
+  "model": "yolo11n.pt",
+  "ultralytics_version": "8.4.173",
+  "torch_version": "2.14.1+cpu",
+  "confidence_cutoff": 0.15,
+  "map50": 0.9892105263157894,
+  "map50_95": 0.8091799370220422,
+  "weights_sha256": "b1e7b9fe5af90f807bfb20906502b731aa55ec7f93f47fdf67577f753e29db58",
+  "onnx_sha256": "5fea9362f93b584f3a85f493c7fdad43cc817d8107e95e45d891d99d39ef422b",
+  "dataset_sha256": "1381819594b9770304b982eab9de5f7d6c6181368243da4e00a4f529b408a80b",
+  "onnx_output_shape": [
+    1,
+    5,
+    8400
+  ],
+  "promoted": true,
+  "precision_at_max_f1": 0.9281745039863188,
+  "recall_at_max_f1": 1.0,
+  "browser_validation": {
+    "validation_scope": "heuristic label agreement; CPU ONNX with browser decode/NMS/fitness contract; PIL bilinear approximates canvas resize",
+    "confidence_cutoff": 0.15,
+    "nms_iou": 0.45,
+    "match_iou": 0.5,
+    "images": 18,
+    "accepted_images": 18,
+    "true_positive": 18,
+    "false_positive": 0,
+    "false_negative": 0,
+    "precision": 1.0,
+    "recall": 1.0
+  }
+}

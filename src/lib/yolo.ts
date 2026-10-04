@@ -6,6 +6,7 @@
  */
 
 import { createSession, getOrt, withTimeout, type OrtSession } from "./ort";
+import { letterboxGeometry, unletterboxBox } from "./yolo-geometry";
 
 export type YoloBox = {
   x: number;
@@ -91,11 +92,9 @@ async function getCocoSession() {
   return cocoReady;
 }
 
-function letterbox(src: ImageData): { tensor: Float32Array; scale: number } {
-  const { width: W, height: H, data } = src;
-  const scale = INPUT / Math.max(W, H);
-  const nw = Math.max(1, Math.round(W * scale));
-  const nh = Math.max(1, Math.round(H * scale));
+function letterbox(src: ImageData) {
+  const { width: W, height: H } = src;
+  const geometry = letterboxGeometry(W, H, INPUT);
   const canvas = document.createElement("canvas");
   canvas.width = INPUT;
   canvas.height = INPUT;
@@ -111,7 +110,7 @@ function letterbox(src: ImageData): { tensor: Float32Array; scale: number } {
   tctx.putImageData(src, 0, 0);
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = "high";
-  ctx.drawImage(tmp, 0, 0, nw, nh);
+  ctx.drawImage(tmp, geometry.padX, geometry.padY, geometry.width, geometry.height);
   const pix = ctx.getImageData(0, 0, INPUT, INPUT).data;
   const tensor = new Float32Array(3 * INPUT * INPUT);
   const plane = INPUT * INPUT;
@@ -120,7 +119,7 @@ function letterbox(src: ImageData): { tensor: Float32Array; scale: number } {
     tensor[plane + i] = pix[i * 4 + 1] / 255;
     tensor[2 * plane + i] = pix[i * 4 + 2] / 255;
   }
-  return { tensor, scale };
+  return { tensor, geometry };
 }
 
 function iou(a: YoloBox, b: YoloBox) {
@@ -156,10 +155,11 @@ function pushBox(
   H: number,
   isCardModel: boolean,
 ) {
+  if (![x1,y1,x2,y2,score,cls].every(Number.isFinite) || score < CONF || score > 1) return;
   const x = Math.max(0, Math.min(x1, x2) / scale);
   const y = Math.max(0, Math.min(y1, y2) / scale);
-  const w = Math.min(W - x, Math.abs(x2 - x1) / scale);
-  const h = Math.min(H - y, Math.abs(y2 - y1) / scale);
+  const w = Math.min(W, Math.max(x1, x2) / scale) - x;
+  const h = Math.min(H, Math.max(y1, y2) / scale) - y;
   if (w < 8 || h < 8) return;
   boxes.push({
     x,
@@ -253,7 +253,7 @@ function decodeYolo8(data: Float32Array | number[], dims: number[], scale: numbe
   return nms(boxes);
 }
 
-function decode(
+export function decodeYoloOutput(
   output: { data: Float32Array | number[]; dims: number[] },
   scale: number,
   W: number,
@@ -286,11 +286,12 @@ function cardFitness(box: YoloBox, W: number, H: number) {
   return score;
 }
 
-function cardFitnessSheet(box: YoloBox, W: number, H: number, cardOnly = false) {
+export function cardFitnessSheet(box: YoloBox, W: number, H: number, cardOnly = false) {
   if (!cardOnly && box.classId === PERSON && box.label !== "card") return 0;
   const area = (box.w * box.h) / (W * H);
   if (cardOnly && area < 0.12) return 0;
-  if (area < 0.006 || area > 0.95) return 0;
+  // A scan may consist entirely of one card; retain conservative COCO filtering.
+  if (area < 0.006 || area > (cardOnly ? 1 : 0.95)) return 0;
   const aspect = box.w / Math.max(1, box.h);
   const portrait = aspect >= 0.48 && aspect <= 0.92;
   const landscape = aspect >= 1.08 && aspect <= 2.2;
@@ -325,7 +326,7 @@ async function runDetect(
   loaded: { session: OrtSession; kind: "yolo26" | "yolo" | "card" },
   src: ImageData,
 ) {
-  const { tensor, scale } = letterbox(src);
+  const { tensor, geometry } = letterbox(src);
   const ort = await getOrt();
   const input = new ort.Tensor("float32", tensor, [1, 3, INPUT, INPUT]);
   const feeds: Record<string, unknown> = {};
@@ -334,13 +335,18 @@ async function runDetect(
   const outName = loaded.session.outputNames[0] ?? Object.keys(result)[0];
   const output = outName ? result[outName] : undefined;
   if (!output) return [] as YoloBox[];
-  return decode(
+  // Decode in model pixels, then remove centered padding before clipping.
+  const boxes = decodeYoloOutput(
     { data: output.data as Float32Array, dims: output.dims },
-    scale,
-    src.width,
-    src.height,
+    1,
+    INPUT,
+    INPUT,
     loaded.kind === "card",
   );
+  return boxes.flatMap(box => {
+    const mapped = unletterboxBox(box, geometry, src.width, src.height);
+    return mapped && mapped.w >= 8 && mapped.h >= 8 ? [{ ...box, ...mapped }] : [];
+  });
 }
 
 export async function detectCardBoxes(src: ImageData): Promise<{

@@ -1,4 +1,6 @@
 import type { CardIdentity, CardSide } from "./types";
+import { assessOcr, aggregateConfidence, confidenceStatus, selectOcrPass, readingOrder,
+  attemptOcrRead, unmeasuredOcrPass, type OcrEvidence, type OcrLine, type OcrPass } from "./ocr-quality";
 import { rotate180 } from "./detect";
 import { contrastGray, cropBand, dataUrlToBase64, encodeJpeg, invertRgb, unsharp } from "./ocr-prep";
 import { detectTextBoxes, cropTextBox } from "./ocr-det";
@@ -172,7 +174,6 @@ const DUMP: Record<string, Partial<CardIdentity>> = {
   "0267": { player: "Shawn Michaels", ...PN22, parallel: "055/299", number: "199", side: "back" },
 };
 
-const DUMP_FLIP = new Set(["0233"]);
 
 let tessReady: Promise<TessWorker> | null = null;
 let tessDisabled = false;
@@ -209,8 +210,7 @@ async function killTess() {
   tessReady = null;
   if (!pending) return;
   try {
-    const worker = await pending;
-    await worker.terminate?.();
+    await withTimeout(pending.then(worker => worker.terminate?.()), 2000, "OCR cleanup timed out");
   } catch {
     /* already dead */
   }
@@ -271,88 +271,85 @@ function downscaleBlob(image: ImageData, maxEdge = 820): Promise<Blob> {
 async function ocrOnce(image: ImageData, psm = "6"): Promise<{ text: string; confidence: number }> {
   const worker = await withTimeout(getTess(), 45000, "OCR engine timed out");
   await worker.setParameters?.({ tessedit_pageseg_mode: psm });
-  const blob = await downscaleBlob(unsharp(contrastGray(image)), 960);
+  // Read unmodified pixels. Contrast/inversion are distinct, recorded passes.
+  const blob = await downscaleBlob(image, 1400);
   const { data } = await withTimeout(worker.recognize(blob), 8000, "OCR timed out");
-  return {
-    text: repairOcr(data.text ?? ""),
-    confidence: typeof data.confidence === "number" ? data.confidence : 0,
-  };
+  return { text: data.text ?? "", confidence: data.confidence };
 }
 
-async function ocrLocal(image: ImageData, fromName: Partial<CardIdentity>): Promise<{
-  text: string;
-  conf: number;
-  rotated: boolean;
-  engine?: "paddleocr" | "ocr";
+async function ocrLocal(image: ImageData, threshold: number): Promise<{
+  text: string; conf: number | null; rotated: boolean;
+  engine: "paddleocr" | "ocr"; passes: OcrPass[]; selectedVariant: string | null;
 }> {
-  let text = "";
-  let conf = 0;
-  let rotated = false;
-  const take = (next: { text: string; confidence: number }, flip: boolean) => {
-    text = text ? `${text}\n${next.text}` : next.text;
-    conf = Math.max(conf, next.confidence);
-    if (flip) rotated = true;
+  const passes: OcrPass[] = [];
+  const score = (text: string) => fieldScore(parseCardText(text));
+  const best = () => selectOcrPass(passes, score, pass => isOcrPassReady(pass, threshold));
+  const sufficient = () => {
+    const selected = best();
+    return selected ? isOcrPassReady(selected, threshold) : false;
   };
-
+  const finish = () => {
+    const selected = best();
+    return { text: selected?.text ?? "", conf: selected?.confidence ?? null,
+      rotated: selected?.rotation === 180, passes,
+      selectedVariant: selected?.variant ?? null,
+      engine: selected?.variant === "paddle-lines" ? "paddleocr" as const : "ocr" as const };
+  };
+  let boxes: Awaited<ReturnType<typeof detectTextBoxes>> = [];
   try {
-    const boxes = await detectTextBoxes(image);
+    boxes = await detectTextBoxes(image);
     if (boxes.length) {
       const paddle = await recognizeLines(image, boxes);
-      if (paddle.text.replace(/\s+/g, "").length >= 4) {
-        take({ text: paddle.text, confidence: paddle.conf }, false);
-        const parsedPaddle = parseCardText(text);
-        if (fieldScore(mergeIdentity(parsedPaddle, fromName)) >= 6 && parsedPaddle.player) {
-          return { text, conf, rotated, engine: "paddleocr" as const };
-        }
-      }
-      const ranked = [...boxes].sort((a, b) => b.w * b.h * b.score - a.w * a.h * a.score).slice(0, 8);
-      ranked.sort((a, b) => a.y - b.y || a.x - b.x);
-      for (const box of ranked) {
-        const crop = cropTextBox(image, box);
-        if (crop.width < 12 || crop.height < 8) continue;
-        const line = await ocrOnce(crop, "7");
-        if (line.text.replace(/\s+/g, "").length >= 2) take(line, false);
-      }
-      const parsedLines = parseCardText(text);
-      if (fieldScore(mergeIdentity(parsedLines, fromName)) >= 6 && parsedLines.player) {
-        return { text, conf, rotated };
-      }
+      if (paddle.text.trim()) passes.push({ variant: "paddle-lines", rotation: 0,
+        text: paddle.text, confidence: paddle.conf, lines: paddle.lines });
+      if (sufficient()) return finish();
     }
-  } catch {
-    /* line detector optional */
-  }
-
-  const first = await ocrOnce(image, "6");
-  take(first, false);
-  let parsed = parseCardText(text);
-  let filled = fieldScore(mergeIdentity(parsed, fromName));
-  if (filled >= 6 && parsed.player) return { text, conf, rotated };
-  const compact = first.text.replace(/\s+/g, "");
-  if (first.confidence < 28 && compact.length < 20 && !parsed.player) {
-    return { text, conf, rotated };
-  }
-
-  const plate = await ocrOnce(cropBand(image, 0, 0.26), "7");
-  take(plate, false);
-  const foot = await ocrOnce(cropBand(image, 0.7, 1), "4");
-  take(foot, false);
-  parsed = parseCardText(text);
-  filled = fieldScore(mergeIdentity(parsed, fromName));
-  if (filled >= 6 && parsed.player) return { text, conf, rotated };
-
-  const inv = await ocrOnce(invertRgb(contrastGray(image)), "6");
-  take(inv, false);
-  parsed = parseCardText(text);
-  filled = fieldScore(mergeIdentity(parsed, fromName));
-  if (filled >= 5) return { text, conf, rotated };
-
-  const second = await ocrOnce(rotate180(image), "6");
-  parsed = parseCardText(second.text);
-  filled = fieldScore(mergeIdentity(parsed, fromName));
-  if (second.confidence + filled * 10 > conf) {
-    take(second, true);
-  }
-  return { text, conf, rotated };
+  } catch { /* Optional detector/recognizer; retain successful passes. */ }
+  if (tessDisabled) return finish();
+  let restarts = 0;
+  const recover = async () => {
+    await killTess();
+    // One worker restart per card; a failed line crop cannot cancel later image passes.
+    if (restarts++ === 0) tessDisabled = false;
+  };
+  const attempt = async <T>(run: () => Promise<T>): Promise<T | null> => {
+    if (tessDisabled) return null;
+    return attemptOcrRead(run, recover);
+  };
+  const read = async (src: ImageData, variant: string, psm = "6", rotation: 0 | 180 = 0,
+    box?: OcrLine["box"]) => {
+    const result = await attempt(() => ocrOnce(src, psm));
+    if (!result) return;
+    const lines: OcrLine[] = [{ text: result.text, confidence: result.confidence, box }];
+    passes.push({ variant, rotation, text: result.text, confidence: aggregateConfidence(lines), lines });
+  };
+  try {
+    await read(image, "original");
+    if (sufficient()) return finish();
+    // Text-line OCR is especially useful for foil nameplates and small set/card numbers.
+    if (boxes.length) {
+      const lines: OcrLine[] = [];
+      for (const box of readingOrder([...boxes].sort((a,b) => b.w*b.score-a.w*a.score).slice(0,4))) {
+        const result = await attempt(() => ocrOnce(cropTextBox(image, box), "7"));
+        if (!result) break; // Reserve the restarted worker for whole-image retries.
+        lines.push({ text: result.text, confidence: result.confidence,
+          box: { x: box.x, y: box.y, w: box.w, h: box.h } });
+      }
+      if (lines.length) passes.push({ variant: "tesseract-lines", rotation: 0, text: lines.map(l => l.text).join("\n"),
+        confidence: aggregateConfidence(lines), lines });
+      if (sufficient()) return finish();
+    }
+    await read(unsharp(contrastGray(image)), "contrast", "11");
+    if (sufficient()) return finish();
+    const footY = Math.floor(image.height * 0.7);
+    await read(cropBand(image, 0.7, 1), "nameplate", "6", 0,
+      { x:0, y:footY, w:image.width, h:image.height-footY });
+    if (sufficient()) return finish();
+    await read(invertRgb(contrastGray(image)), "inverted", "11");
+    if (sufficient()) return finish();
+    await read(rotate180(image), "rotated", "6", 180);
+  } catch { await killTess(); }
+  return finish();
 }
 
 let visionCalls = 0;
@@ -402,7 +399,7 @@ function repairOcr(text: string) {
     .replace(/\bP0KEMON\b/gi, "POKEMON")
     .replace(/[“”]/g, '"')
     .replace(/[’]/g, "'")
-    .replace(/\s+/g, " ")
+    .replace(/[ \t]+/g, " ")
     .trim();
 }
 
@@ -479,10 +476,18 @@ const NAME_STOP = new Set([
   "skybox","fleer","copyright","trademark","patent","collect","collector","trading",
 ]);
 
+// Printed team labels are not player-name candidates.
+const TEAM_TERMS = new Set([
+  "angels", "astros", "athletics", "braves", "brewers", "cardinals", "cubs",
+  "diamondbacks", "dodgers", "giants", "guardians", "jays", "mariners", "marlins",
+  "mets", "nationals", "orioles", "padres", "phillies", "pirates", "rangers",
+  "rays", "reds", "rockies", "royals", "sox", "tigers", "twins", "yankees",
+]);
+
 function titleCaseName(raw: string) {
   return raw
     .toLowerCase()
-    .replace(/\b([a-z])/g, (m) => m.toUpperCase())
+    .replace(/(^|[^\p{L}])(\p{L})/gu, (_match, boundary: string, letter: string) => boundary + letter.toUpperCase())
     .replace(/\b(De|Da|Del|Van|Von|La|Le|Mc|Mac)\b/g, (m) => m);
 }
 
@@ -492,12 +497,31 @@ function polishPlayer(name: string) {
 
 function extractSubject(text: string): string | null {
   const candidates: { name: string; score: number }[] = [];
+  const lines = text.split(/\r?\n/);
+  const nameLines: string[] = [];
+  const fragment = (line: string) =>
+    /^(?:\p{Lu}\p{Ll}+|\p{Lu}{2,}|\p{Lu}\.|de|da|del|van|von|la|le)$/u.test(line.trim()) &&
+    !NAME_STOP.has(line.trim().toLowerCase().replace(/\./g, "")) &&
+    !TEAM_TERMS.has(line.trim().toLowerCase());
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index].trim();
+    if (!fragment(line)) { nameLines.push(line); continue; }
+    const parts = [line];
+    while (index + 1 < lines.length && fragment(lines[index + 1])) parts.push(lines[++index].trim());
+    // Join only adjacent singleton fragments; full lines and blank lines stay boundaries.
+    nameLines.push(...(parts.length >= 2 && parts.length <= 4 ? [parts.join(" ")] : parts));
+  }
+  const nameText = nameLines.map(line => {
+    if ([...line.matchAll(/\p{L}+/gu)].some(match => TEAM_TERMS.has(match[0].toLowerCase()))) return "";
+    return line.replace(/\p{L}+(?:\.)?/gu, word =>
+      NAME_STOP.has(word.toLowerCase().replace(/\./g, "")) ? "\u0000" : word);
+  }).join("\n");
   const patterns = [
-    /\b([A-Z][a-z]+(?:\s+(?:[A-Z][a-z]+|[A-Z]\.|de|da|del|van|von|la|le|mc[A-Z][a-z]+)){1,3})\b/g,
-    /\b([A-Z]{2,}(?:\s+[A-Z]{2,}){1,3})\b/g,
+    /(?<!\p{L})(\p{Lu}\p{Ll}+(?:[ \t]+(?:\p{Lu}\p{Ll}+|\p{Lu}\.|de|da|del|van|von|la|le)){1,3})(?!\p{L})/gu,
+    /(?<!\p{L})(\p{Lu}{2,}(?:[ \t]+\p{Lu}{2,}){1,3})(?!\p{L})/gu,
   ];
   for (const re of patterns) {
-    for (const match of text.matchAll(re)) {
+    for (const match of nameText.matchAll(re)) {
       const raw = match[1];
       const tokens = raw.split(/\s+/);
       if (tokens.some((t) => NAME_STOP.has(t.toLowerCase().replace(/\./g, "")))) continue;
@@ -522,20 +546,23 @@ function extractSubject(text: string): string | null {
   return candidates[0]?.score && candidates[0].score >= 4 ? candidates[0].name : null;
 }
 
-function parseCardText(text: string): Partial<CardIdentity> {
-  const lower = text.toLowerCase();
-  const out: Partial<CardIdentity> = { rawText: text };
+export function parseCardText(rawText: string): Partial<CardIdentity> {
+  const text = repairOcr(rawText);
+  const lower = text.toLowerCase().replace(/\s+/g, " ");
+  const out: Partial<CardIdentity> = { rawText };
 
-  const nearYear = text.match(/(?:19[8-9]\d|20[0-2]\d)(?=\s+(?:UPPER|TOPPS|PANINI|BOWMAN|DONRUSS|FLEER|WWE|AEW|POKEMON|NFL|NBA|MLB|NHL))/i);
-  const copyYear = text.match(/©\s*((?:19[8-9]\d|20[0-2]\d))/i);
-  if (nearYear) {
+  const nearYear = text.match(/(?:19\d{2}|20\d{2})(?=\s+(?:UPPER|TOPPS|PANINI|BOWMAN|DONRUSS|FLEER|WWE|AEW|POKEMON|NFL|NBA|MLB|NHL))/i);
+  const copyYear = text.match(/©\s*((?:19\d{2}|20\d{2}))/i);
+  const currentYear = new Date().getFullYear();
+  const validYear = (year: number) => Number.isInteger(year) && year >= 1900 && year <= currentYear;
+  if (nearYear && validYear(Number(nearYear[0]))) {
     out.year = Number(nearYear[0]);
-  } else if (copyYear) {
+  } else if (copyYear && validYear(Number(copyYear[1]))) {
     out.year = Number(copyYear[1]);
   } else {
-    const years = [...text.matchAll(/\b((?:19[8-9]\d)|(?:20[0-2]\d))\b/g)]
+    const years = [...text.matchAll(/\b((?:19\d{2})|(?:20\d{2}))\b/g)]
       .map((m) => Number(m[1]))
-      .filter((y) => y >= 1980 && y <= 2026);
+      .filter(validYear);
     const prefer = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
     let picked: number | null = null;
     for (const y of prefer) {
@@ -554,7 +581,7 @@ function parseCardText(text: string): Partial<CardIdentity> {
     }
   }
 
-  for (const set of [...SETS, ...GENERIC_SETS]) {
+  for (const set of [...SETS, ...GENERIC_SETS].sort((a,b) => b.name.length-a.name.length)) {
     if (set.re.test(text)) {
       out.set = set.name;
       break;
@@ -589,21 +616,17 @@ function parseCardText(text: string): Partial<CardIdentity> {
   else if (/\bwave\b/i.test(text)) out.parallel = "Wave";
   else if (/\bshimmer\b/i.test(text)) out.parallel = "Shimmer";
 
-  const numbered = text.match(/\b(\d{1,3})\s*\/\s*(\d{1,3})\b/);
-  if (numbered && Number(numbered[2]) >= 5) {
+  const numbered = text.match(/\b(\d{1,5})\s*\/\s*(\d{1,5})\b/);
+  if (numbered && Number(numbered[1]) > 0 && Number(numbered[1]) <= Number(numbered[2])) {
     out.parallel = out.parallel
       ? `${out.parallel} ${numbered[1]}/${numbered[2]}`
       : `${numbered[1]}/${numbered[2]}`;
   }
 
-  const prefixed = text.match(/\b((?:DZ|FVF|FMP|MO|AOK|TT|CS|RC|SP|YG)-\d{1,4})\b/i);
-  if (prefixed) out.number = prefixed[1].toUpperCase();
-  else {
-    const hashed = text.match(/#\s*(\d{1,4})\b/);
-    const no = text.match(/\bNo\.?\s*(\d{1,4})\b/i);
-    if (hashed) out.number = hashed[1];
-    else if (no) out.number = no[1];
-  }
+  const marked = text.match(/(?:#\s*|\bNo\.?\s*)([A-Z]{1,8}-[A-Z0-9]{1,6}|\d{1,4})\b/i);
+  // Unmarked codes need a digit so ALL-STAR/O-Pee-Chee cannot become numbers.
+  const prefixed = text.match(/\b([A-Z]{1,8}-(?=[A-Z0-9]{1,6}\b)[A-Z0-9]*\d[A-Z0-9]*)\b/i);
+  if (marked || prefixed) out.number = (marked ?? prefixed)![1].toUpperCase();
 
   out.side = inferSide(text);
   return out;
@@ -642,10 +665,6 @@ function identityFromFilename(name: string): Partial<CardIdentity> {
   return out;
 }
 
-function dumpNeedsFlip(name: string) {
-  const serial = name.toLowerCase().match(/year-manfu?cturer-card-(\d{4})/);
-  return Boolean(serial && DUMP_FLIP.has(serial[1]));
-}
 
 function mergeIdentity(primary: Partial<CardIdentity>, fallback: Partial<CardIdentity>): Partial<CardIdentity> {
   return {
@@ -672,76 +691,71 @@ function fieldScore(partial: Partial<CardIdentity>) {
   return n;
 }
 
-function finalize(partial: Partial<CardIdentity>, rawText: string, ocrConf: number, engine: CardIdentity["engine"] = "ocr"): CardIdentity {
-  const fields = fieldScore(partial);
-  const confidence = Math.min(1, Math.max(0, ocrConf / 140 + fields / 16));
-  return {
-    player: partial.player ?? null,
-    year: partial.year ?? null,
-    manufacturer: partial.manufacturer ?? null,
-    set: partial.set ?? null,
-    number: partial.number ?? null,
-    parallel: partial.parallel ?? null,
-    side: partial.side ?? "unknown",
-    confidence,
-    rawText,
-    engine,
-  };
+export function missingPrintedFields(partial: Partial<CardIdentity>) {
+  return (["player", "manufacturer", "year", "set"] as const).filter(key => !partial[key]);
 }
 
-export async function identifyCard(
-  image: ImageData,
-  filename: string,
-  opts: { vision?: boolean } = {},
-): Promise<IdentifyResult> {
-  const fromName = identityFromFilename(filename);
-  const flipped = dumpNeedsFlip(filename);
-  if (typeof window === "undefined") {
-    return { identity: finalize(fromName, "", 0, "filename"), rotated: flipped };
-  }
-  if (fromName.player && fromName.year && fieldScore(fromName) >= 7) {
-    return { identity: finalize(fromName, "", 90, "filename"), rotated: flipped };
-  }
+export function isOcrPassReady(pass: OcrPass, threshold: number) {
+  return assessOcr(pass.confidence, pass.text, missingPrintedFields(parseCardText(pass.text)), threshold).status === "READY";
+}
 
+function finalize(partial: Partial<CardIdentity>, rawText: string, ocrConf: number | null,
+  engine: CardIdentity["engine"] = "ocr", passes: OcrPass[] = [], selectedVariant: string | null = null,
+  threshold = 80, filenameHints: Partial<CardIdentity> = {}): CardIdentity {
+  const missing = missingPrintedFields(partial);
+  const review: OcrEvidence = { ...assessOcr(ocrConf, rawText, missing, threshold), passes, selectedVariant };
+  return { player: partial.player ?? null, year: partial.year ?? null,
+    manufacturer: partial.manufacturer ?? null, set: partial.set ?? null,
+    number: partial.number ?? null, parallel: partial.parallel ?? null,
+    side: partial.side ?? "unknown", confidence: (review.confidence ?? 0) / 100,
+    rawText, engine, ocr: review, filenameHints };
+}
+
+export async function identifyCard(image: ImageData, filename: string,
+  opts: { vision?: boolean; reviewThreshold?: number } = {}): Promise<IdentifyResult> {
+  const fromName = identityFromFilename(filename);
+  const threshold = opts.reviewThreshold ?? 80;
+  confidenceStatus(null, threshold); // Validate caller configuration even with no OCR engine.
+  if (typeof window === "undefined") {
+    return { identity: finalize({}, "", null, "filename", [], null, threshold, fromName), rotated: false };
+  }
   return withOcrLock(async () => {
-    let text = "";
-    let conf = 0;
-    let rotated = false;
-    let engine: CardIdentity["engine"] = "ocr";
-    if (!tessDisabled) {
-      try {
-        const local = await ocrLocal(image, fromName);
-        text = local.text;
-        conf = local.conf;
-        rotated = local.rotated;
-        if (local.engine) engine = local.engine;
-      } catch {
-        await killTess();
-      }
-    }
-    let parsed = mergeIdentity(parseCardText(text), fromName);
-    const weakLocal = fieldScore(parsed) < 8 || !parsed.manufacturer || !parsed.player;
-    const oriented = rotated ? rotate180(image) : image;
-    if (opts.vision === true && weakLocal) {
+    tessDisabled = false; // A failed worker is recreated for the next card.
+    const local = await ocrLocal(image, threshold);
+    const passes = [...local.passes];
+    let text = local.text;
+    let conf = local.conf;
+    let engine: CardIdentity["engine"] = local.engine;
+    let selectedVariant = local.selectedVariant;
+    let parsed = parseCardText(text);
+    const missing = () => missingPrintedFields(parsed);
+    const weak = () => assessOcr(conf, text, missing(), threshold).status !== "READY";
+    const oriented = local.rotated ? rotate180(image) : image;
+    // Vision has no measured engine score. Preserve local passes and keep it reviewable.
+    if (opts.vision === true && weak()) {
       const paddle = await ocrPaddleVl(oriented);
       if (paddle) {
         parsed = mergeIdentity(paddle, parsed);
         engine = "paddleocr-vl";
-        if (paddle.rawText) text = paddle.rawText;
-        conf = Math.max(conf, 90);
+        text = paddle.rawText ?? text;
+        conf = null;
+        selectedVariant = "paddleocr-vl";
+        passes.push(unmeasuredOcrPass(selectedVariant, text, local.rotated ? 180 : 0));
       }
     }
-    const stillWeak = fieldScore(parsed) < 8 || !parsed.manufacturer || !parsed.player;
-    if (opts.vision === true && stillWeak) {
-      const vis = await ocrVision(oriented);
-      if (vis) {
-        parsed = mergeIdentity(vis, parsed);
+    if (opts.vision === true && (!parsed.player || !parsed.manufacturer || !parsed.year || !parsed.set)) {
+      const vision = await ocrVision(oriented);
+      if (vision) {
+        parsed = mergeIdentity(vision, parsed);
         engine = "vision";
-        if (vis.rawText) text = vis.rawText;
-        conf = Math.max(conf, 88);
+        text = vision.rawText ?? text;
+        conf = null;
+        selectedVariant = "vision";
+        passes.push(unmeasuredOcrPass(selectedVariant, text, local.rotated ? 180 : 0));
       }
     }
-    return { identity: finalize(parsed, text, conf, engine), rotated };
+    return { identity: finalize(parsed, text, conf, engine, passes, selectedVariant, threshold, fromName),
+      rotated: local.rotated };
   });
 }
 

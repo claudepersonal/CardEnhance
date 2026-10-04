@@ -19,3 +19,7 @@ yolo11n.pt
 .vercel
 .node_modules.lock
 AGENTS.md
+.wrangler/
+__pycache__/
+*.pyc
+.venv-yolo/

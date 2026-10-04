@@ -1,3 +1,5 @@
+import type { OcrEvidence } from "./ocr-quality";
+
 export type OutputFormat = "png" | "jpg" | "webp";
 
 export type JobStatus = "queued" | "processing" | "completed" | "failed";
@@ -19,6 +21,9 @@ export type CardIdentity = {
   confidence: number;
   rawText: string;
   engine?: OcrEngine;
+  /** Measured OCR evidence, separate from legacy identity completeness. */
+  ocr?: OcrEvidence;
+  filenameHints?: Partial<Pick<CardIdentity, "player" | "year" | "manufacturer" | "set" | "number" | "parallel" | "side">>;
 };
 
 export type EnhancementSettings = {
