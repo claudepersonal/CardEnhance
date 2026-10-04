@@ -12,9 +12,20 @@ manufacturer, year, and set. Passes from different rotations are not concatenate
 Line crops preserve aspect ratio. Crop boxes refer to pixels in that recognition
 pass, before any later manual rotation or enhancement.
 
+Complete passes that meet the threshold outrank incomplete passes, without
+raising their recorded scores. Text boxes on the same row are read left to right.
+A failed crop can restart the worker once and continue whole-image retries;
+cleanup is bounded even if a worker fails to load. Optional vision transcriptions
+appear as selected, unmeasured passes in the evidence history. The preview shows
+valid zero scores and never relabels legacy identity confidence as an OCR score.
+
 Parser checks cover vintage years, accented names, specific product names,
 numbered parallels including 1/1, and explicitly marked card numbers. Ordinary
 hyphenated text such as ALL-STAR cannot become an unmarked card number.
+Adjacent singleton name fragments are joined for matching while complete lines
+and blank lines remain boundaries; original line breaks stay in the transcription.
+Manufacturer-adjacent and copyright years use the same
+1900-to-current-year bound as other year matches.
 
 ## Formula computation
 

@@ -1,12 +1,54 @@
 {
   "date": "2026-10-04",
-  "javascript_tests": { "command": "npm test", "passed": 157, "failed": 0 },
-  "typecheck": { "command": "npm run typecheck", "exit_code": 0 },
-  "lint": { "command": "npm run lint", "errors": 0, "warnings": 5, "warning_scope": "existing application warnings" },
-  "build": { "command": "npm run build", "exit_code": 0, "database_migration": "skipped: DATABASE_URL absent" },
-  "python_tests": { "command": "python -m unittest discover -s scripts -p test_train_card_yolo.py", "passed": 5, "failed": 0 },
-  "python_static_checks": { "ruff_check": "passed for three touched Python files", "ruff_format_check": "passed", "type_checkers": "repository has no configured ty or basedpyright gate" },
-  "code_review": { "result": "no unresolved findings after fixes", "scope": "read-only independent review of implementation and receipts" },
-  "browser_visual_check": { "status": "blocked", "reason": "session browser could not reach local preview" },
-  "ocr_accuracy_benchmark": { "status": "not measured", "reason": "no independent sports-card reference transcriptions supplied" }
+  "javascript_tests": {
+    "command": "npm test",
+    "passed": 166,
+    "failed": 0
+  },
+  "typecheck": {
+    "command": "npm run typecheck",
+    "exit_code": 0
+  },
+  "lint": {
+    "command": "npm run lint",
+    "errors": 0,
+    "warnings": 5,
+    "warning_scope": "existing application warnings"
+  },
+  "build": {
+    "command": "npm run build",
+    "exit_code": 0,
+    "database_migration": "skipped: DATABASE_URL absent"
+  },
+  "python_tests": {
+    "command": "python -m unittest discover -s scripts -p test_train_card_yolo.py",
+    "passed": 5,
+    "failed": 0
+  },
+  "python_static_checks": {
+    "ruff_check": "passed for three touched Python files",
+    "ruff_format_check": "passed",
+    "type_checkers": "repository has no configured ty or basedpyright gate"
+  },
+  "code_review": {
+    "result": "local review findings addressed with passing regression coverage",
+    "scope": "read-only independent review of implementation and receipts"
+  },
+  "browser_visual_check": {
+    "status": "blocked",
+    "reason": "session browser could not reach local preview"
+  },
+  "ocr_accuracy_benchmark": {
+    "status": "not measured",
+    "reason": "no independent sports-card reference transcriptions supplied"
+  },
+  "automated_review_regressions": [
+    "ready-pass priority",
+    "line-wrap and team boundaries",
+    "future-year rejection",
+    "horizontal reading order",
+    "measured zero/legacy confidence display",
+    "crop-failure recovery",
+    "fallback pass history"
+  ]
 }

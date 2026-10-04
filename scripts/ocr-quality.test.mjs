@@ -4,7 +4,7 @@ import test from 'node:test';
 import ts from 'typescript';
 const source = readFileSync(new URL('../src/lib/ocr-quality.ts', import.meta.url), 'utf8');
 const compiled = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } }).outputText;
-const { confidenceStatus, assessOcr, aggregateConfidence, selectOcrPass, recognitionSize, boundingBoxStatus } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
+const { confidenceStatus, assessOcr, aggregateConfidence, selectOcrPass, recognitionSize, boundingBoxStatus, readingOrder, attemptOcrRead, unmeasuredOcrPass } = await import(`data:text/javascript;base64,${Buffer.from(compiled).toString('base64')}`);
 
 test('confidence rule handles missing, invalid and exact threshold values', () => {
   for (const [value, expected] of [[null,'MISSING'],[undefined,'MISSING'],['','MISSING'],['80','INVALID'],[NaN,'INVALID'],[Infinity,'INVALID'],[-1,'INVALID'],[101,'INVALID'],[0,'REVIEW'],[79.999,'REVIEW'],[80,'READY'],[100,'READY']]) {
@@ -44,4 +44,31 @@ test('bounding boxes must agree with their coordinate columns', () => {
   assert.equal(boundingBoxStatus({...good,width:0}), 'CHECK');
   assert.equal(boundingBoxStatus({...good,left:-1}), 'CHECK');
   assert.equal(boundingBoxStatus({...good,bbox:'bad'}), 'CHECK');
+});
+test('a ready complete pass wins over a higher-scoring incomplete pass', () => {
+  const incomplete = {variant:'original',rotation:0,text:'incomplete',confidence:99,lines:[]};
+  const complete = {variant:'contrast',rotation:0,text:'complete',confidence:80,lines:[]};
+  assert.equal(selectOcrPass([incomplete,complete],text => text==='complete'?9:7, pass => pass===complete),complete);
+  assert.equal(complete.confidence,80);
+});
+test('text boxes on the same row are read from left to right without mutating input', () => {
+  const boxes = [{x:200,y:20},{x:10,y:20},{x:5,y:100}];
+  assert.deepEqual(readingOrder(boxes),[boxes[1],boxes[0],boxes[2]]);
+  assert.equal(boxes[0].x,200);
+});
+test('a failed crop recovers and permits a later whole-image OCR pass', async () => {
+  const reads = [], history = ['original'];
+  const recover = async () => reads.push('restart');
+  const crop = await attemptOcrRead(async () => {reads.push('crop');throw new Error('crop timed out');},recover);
+  assert.equal(crop,null);
+  const contrast = await attemptOcrRead(async () => {reads.push('contrast');return 'complete text';},recover);
+  history.push(contrast);
+  assert.deepEqual(reads,['crop','restart','contrast']);
+  assert.deepEqual(history,['original','complete text']);
+});
+test('unmeasured fallback transcription is an actual pass with preserved rotation', () => {
+  const text = 'RAW\nVISION TEXT';
+  const pass = unmeasuredOcrPass('vision',text,180);
+  assert.deepEqual(pass,{variant:'vision',text,rotation:180,confidence:null,lines:[{text,confidence:null}]});
+  assert.equal(assessOcr(pass.confidence,pass.text,[],80).status,'MISSING');
 });

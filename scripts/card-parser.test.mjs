@@ -43,3 +43,24 @@ test('OCR retries until the same required fields used by review are ready', () =
   assert.equal(api.isOcrPassReady(pass('2024 TOPPS CHROME\nMIKE TROUT'),80), true);
   assert.equal(api.isOcrPassReady({...pass('2024 TOPPS CHROME\nMIKE TROUT'),confidence:40},80), false);
 });
+test('preferred year matches reject future OCR years and still find a valid year', () => {
+  const future = new Date().getFullYear() + 5;
+  assert.equal(api.parseCardText(`${future} TOPPS CHROME\nMIKE TROUT`).year, null);
+  assert.equal(api.parseCardText(`TOPPS CHROME\nMIKE TROUT\n© ${future}`).year, null);
+  assert.equal(api.parseCardText(`${future} TOPPS\n1952\nMICKEY MANTLE`).year,1952);
+});
+test('line-wrapped names are matched while the raw transcription stays untouched', () => {
+  const text = '2024 TOPPS CHROME\nSHOHEI\nOHTANI';
+  assert.equal(api.parseCardText(text).player,'Shohei Ohtani');
+  assert.equal(api.parseCardText(text).rawText,text);
+  assert.equal(api.parseCardText('2026 UPPER DECK\nMINA\nSHIRAKAWA').player,'Mina Shirakawa');
+});
+test('name matching preserves team and blank-line boundaries', () => {
+  for (const name of ['SHOHEI OHTANI','SHOHEI\nOHTANI']) {
+    assert.equal(api.parseCardText(`2024 TOPPS CHROME\n${name}\nLOS ANGELES DODGERS\n#17`).player,'Shohei Ohtani');
+  }
+  assert.equal(api.parseCardText('2024 TOPPS CHROME\nMIKE TROUT\nLOS ANGELES ANGELS\n#27').player,'Mike Trout');
+  assert.equal(api.parseCardText('2024 TOPPS CHROME\nSHOHEI\nOHTANI\nDODGERS\n#17').player,'Shohei Ohtani');
+  assert.equal(api.parseCardText('2024 TOPPS CHROME\nMIKE\nTROUT\nANGELS\n#27').player,'Mike Trout');
+  assert.equal(api.parseCardText('2024 TOPPS CHROME\nSHOHEI\n\nOHTANI').player,undefined);
+});

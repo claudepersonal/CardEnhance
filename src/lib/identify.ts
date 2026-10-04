@@ -1,5 +1,6 @@
 import type { CardIdentity, CardSide } from "./types";
-import { assessOcr, aggregateConfidence, confidenceStatus, selectOcrPass, type OcrEvidence, type OcrLine, type OcrPass } from "./ocr-quality";
+import { assessOcr, aggregateConfidence, confidenceStatus, selectOcrPass, readingOrder,
+  attemptOcrRead, unmeasuredOcrPass, type OcrEvidence, type OcrLine, type OcrPass } from "./ocr-quality";
 import { rotate180 } from "./detect";
 import { contrastGray, cropBand, dataUrlToBase64, encodeJpeg, invertRgb, unsharp } from "./ocr-prep";
 import { detectTextBoxes, cropTextBox } from "./ocr-det";
@@ -209,8 +210,7 @@ async function killTess() {
   tessReady = null;
   if (!pending) return;
   try {
-    const worker = await pending;
-    await worker.terminate?.();
+    await withTimeout(pending.then(worker => worker.terminate?.()), 2000, "OCR cleanup timed out");
   } catch {
     /* already dead */
   }
@@ -283,7 +283,7 @@ async function ocrLocal(image: ImageData, threshold: number): Promise<{
 }> {
   const passes: OcrPass[] = [];
   const score = (text: string) => fieldScore(parseCardText(text));
-  const best = () => selectOcrPass(passes, score);
+  const best = () => selectOcrPass(passes, score, pass => isOcrPassReady(pass, threshold));
   const sufficient = () => {
     const selected = best();
     return selected ? isOcrPassReady(selected, threshold) : false;
@@ -306,9 +306,20 @@ async function ocrLocal(image: ImageData, threshold: number): Promise<{
     }
   } catch { /* Optional detector/recognizer; retain successful passes. */ }
   if (tessDisabled) return finish();
+  let restarts = 0;
+  const recover = async () => {
+    await killTess();
+    // One worker restart per card; a failed line crop cannot cancel later image passes.
+    if (restarts++ === 0) tessDisabled = false;
+  };
+  const attempt = async <T>(run: () => Promise<T>): Promise<T | null> => {
+    if (tessDisabled) return null;
+    return attemptOcrRead(run, recover);
+  };
   const read = async (src: ImageData, variant: string, psm = "6", rotation: 0 | 180 = 0,
     box?: OcrLine["box"]) => {
-    const result = await ocrOnce(src, psm);
+    const result = await attempt(() => ocrOnce(src, psm));
+    if (!result) return;
     const lines: OcrLine[] = [{ text: result.text, confidence: result.confidence, box }];
     passes.push({ variant, rotation, text: result.text, confidence: aggregateConfidence(lines), lines });
   };
@@ -318,12 +329,13 @@ async function ocrLocal(image: ImageData, threshold: number): Promise<{
     // Text-line OCR is especially useful for foil nameplates and small set/card numbers.
     if (boxes.length) {
       const lines: OcrLine[] = [];
-      for (const box of [...boxes].sort((a,b) => b.w*b.score-a.w*a.score).slice(0,4).sort((a,b) => a.y-b.y)) {
-        const result = await ocrOnce(cropTextBox(image, box), "7");
+      for (const box of readingOrder([...boxes].sort((a,b) => b.w*b.score-a.w*a.score).slice(0,4))) {
+        const result = await attempt(() => ocrOnce(cropTextBox(image, box), "7"));
+        if (!result) break; // Reserve the restarted worker for whole-image retries.
         lines.push({ text: result.text, confidence: result.confidence,
           box: { x: box.x, y: box.y, w: box.w, h: box.h } });
       }
-      passes.push({ variant: "tesseract-lines", rotation: 0, text: lines.map(l => l.text).join("\n"),
+      if (lines.length) passes.push({ variant: "tesseract-lines", rotation: 0, text: lines.map(l => l.text).join("\n"),
         confidence: aggregateConfidence(lines), lines });
       if (sufficient()) return finish();
     }
@@ -464,6 +476,14 @@ const NAME_STOP = new Set([
   "skybox","fleer","copyright","trademark","patent","collect","collector","trading",
 ]);
 
+// Printed team labels are not player-name candidates.
+const TEAM_TERMS = new Set([
+  "angels", "astros", "athletics", "braves", "brewers", "cardinals", "cubs",
+  "diamondbacks", "dodgers", "giants", "guardians", "jays", "mariners", "marlins",
+  "mets", "nationals", "orioles", "padres", "phillies", "pirates", "rangers",
+  "rays", "reds", "rockies", "royals", "sox", "tigers", "twins", "yankees",
+]);
+
 function titleCaseName(raw: string) {
   return raw
     .toLowerCase()
@@ -477,12 +497,31 @@ function polishPlayer(name: string) {
 
 function extractSubject(text: string): string | null {
   const candidates: { name: string; score: number }[] = [];
+  const lines = text.split(/\r?\n/);
+  const nameLines: string[] = [];
+  const fragment = (line: string) =>
+    /^(?:\p{Lu}\p{Ll}+|\p{Lu}{2,}|\p{Lu}\.|de|da|del|van|von|la|le)$/u.test(line.trim()) &&
+    !NAME_STOP.has(line.trim().toLowerCase().replace(/\./g, "")) &&
+    !TEAM_TERMS.has(line.trim().toLowerCase());
+  for (let index = 0; index < lines.length; index++) {
+    const line = lines[index].trim();
+    if (!fragment(line)) { nameLines.push(line); continue; }
+    const parts = [line];
+    while (index + 1 < lines.length && fragment(lines[index + 1])) parts.push(lines[++index].trim());
+    // Join only adjacent singleton fragments; full lines and blank lines stay boundaries.
+    nameLines.push(...(parts.length >= 2 && parts.length <= 4 ? [parts.join(" ")] : parts));
+  }
+  const nameText = nameLines.map(line => {
+    if ([...line.matchAll(/\p{L}+/gu)].some(match => TEAM_TERMS.has(match[0].toLowerCase()))) return "";
+    return line.replace(/\p{L}+(?:\.)?/gu, word =>
+      NAME_STOP.has(word.toLowerCase().replace(/\./g, "")) ? "\u0000" : word);
+  }).join("\n");
   const patterns = [
     /(?<!\p{L})(\p{Lu}\p{Ll}+(?:[ \t]+(?:\p{Lu}\p{Ll}+|\p{Lu}\.|de|da|del|van|von|la|le)){1,3})(?!\p{L})/gu,
     /(?<!\p{L})(\p{Lu}{2,}(?:[ \t]+\p{Lu}{2,}){1,3})(?!\p{L})/gu,
   ];
   for (const re of patterns) {
-    for (const match of text.matchAll(re)) {
+    for (const match of nameText.matchAll(re)) {
       const raw = match[1];
       const tokens = raw.split(/\s+/);
       if (tokens.some((t) => NAME_STOP.has(t.toLowerCase().replace(/\./g, "")))) continue;
@@ -509,19 +548,21 @@ function extractSubject(text: string): string | null {
 
 export function parseCardText(rawText: string): Partial<CardIdentity> {
   const text = repairOcr(rawText);
-  const lower = text.toLowerCase();
+  const lower = text.toLowerCase().replace(/\s+/g, " ");
   const out: Partial<CardIdentity> = { rawText };
 
   const nearYear = text.match(/(?:19\d{2}|20\d{2})(?=\s+(?:UPPER|TOPPS|PANINI|BOWMAN|DONRUSS|FLEER|WWE|AEW|POKEMON|NFL|NBA|MLB|NHL))/i);
   const copyYear = text.match(/©\s*((?:19\d{2}|20\d{2}))/i);
-  if (nearYear) {
+  const currentYear = new Date().getFullYear();
+  const validYear = (year: number) => Number.isInteger(year) && year >= 1900 && year <= currentYear;
+  if (nearYear && validYear(Number(nearYear[0]))) {
     out.year = Number(nearYear[0]);
-  } else if (copyYear) {
+  } else if (copyYear && validYear(Number(copyYear[1]))) {
     out.year = Number(copyYear[1]);
   } else {
     const years = [...text.matchAll(/\b((?:19\d{2})|(?:20\d{2}))\b/g)]
       .map((m) => Number(m[1]))
-      .filter((y) => y >= 1900 && y <= new Date().getFullYear());
+      .filter(validYear);
     const prefer = [2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018];
     let picked: number | null = null;
     for (const y of prefer) {
@@ -681,6 +722,7 @@ export async function identifyCard(image: ImageData, filename: string,
   return withOcrLock(async () => {
     tessDisabled = false; // A failed worker is recreated for the next card.
     const local = await ocrLocal(image, threshold);
+    const passes = [...local.passes];
     let text = local.text;
     let conf = local.conf;
     let engine: CardIdentity["engine"] = local.engine;
@@ -698,6 +740,7 @@ export async function identifyCard(image: ImageData, filename: string,
         text = paddle.rawText ?? text;
         conf = null;
         selectedVariant = "paddleocr-vl";
+        passes.push(unmeasuredOcrPass(selectedVariant, text, local.rotated ? 180 : 0));
       }
     }
     if (opts.vision === true && (!parsed.player || !parsed.manufacturer || !parsed.year || !parsed.set)) {
@@ -708,9 +751,10 @@ export async function identifyCard(image: ImageData, filename: string,
         text = vision.rawText ?? text;
         conf = null;
         selectedVariant = "vision";
+        passes.push(unmeasuredOcrPass(selectedVariant, text, local.rotated ? 180 : 0));
       }
     }
-    return { identity: finalize(parsed, text, conf, engine, local.passes, selectedVariant, threshold, fromName),
+    return { identity: finalize(parsed, text, conf, engine, passes, selectedVariant, threshold, fromName),
       rotated: local.rotated };
   });
 }

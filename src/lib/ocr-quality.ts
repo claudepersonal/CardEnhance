@@ -58,16 +58,34 @@ export function assessOcr(confidence: unknown, rawText: string, missingFields: s
   return { status, reasons, threshold, confidence: typeof confidence === 'number' && Number.isFinite(confidence) && confidence >= 0 && confidence <= 100 ? confidence : null };
 }
 
-export function selectOcrPass(passes: OcrPass[], printedFieldScore: (text: string) => number): OcrPass | null {
+export function selectOcrPass(passes: OcrPass[], printedFieldScore: (text: string) => number,
+  isReady: (pass: OcrPass) => boolean = () => false): OcrPass | null {
   let best: OcrPass | null = null;
+  let bestReady = false;
   let rank = -Infinity;
   for (const pass of passes) {
     if (!pass.text.trim()) continue;
     // Coverage helps select a pass; it never changes the recorded OCR score.
     const next = (pass.confidence ?? 0) + printedFieldScore(pass.text) * 2;
-    if (next > rank) { rank = next; best = pass; }
+    const ready = isReady(pass);
+    if ((ready && !bestReady) || (ready === bestReady && next > rank)) {
+      rank = next; best = pass; bestReady = ready;
+    }
   }
   return best;
+}
+
+export function readingOrder<T extends {x:number;y:number}>(boxes: readonly T[]): T[] {
+  return [...boxes].sort((a,b) => a.y-b.y || a.x-b.x);
+}
+
+export async function attemptOcrRead<T>(read: () => Promise<T>, recover: () => Promise<void>): Promise<T | null> {
+  try { return await read(); }
+  catch { await recover(); return null; }
+}
+
+export function unmeasuredOcrPass(variant: string, text: string, rotation: 0 | 180): OcrPass {
+  return { variant, text, rotation, confidence: null, lines: [{text, confidence:null}] };
 }
 
 export function recognitionSize(width: number, height: number, targetHeight = 48, maxWidth = 320) {
