@@ -1,0 +1,341 @@
+{
+  "validation_scope": "heuristic label agreement; CPU ONNX with browser decode/NMS/fitness contract; PIL bilinear approximates canvas resize",
+  "confidence_cutoff": 0.15,
+  "nms_iou": 0.45,
+  "match_iou": 0.5,
+  "images": 18,
+  "accepted_images": 18,
+  "true_positive": 18,
+  "false_positive": 0,
+  "false_negative": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "records": [
+    {
+      "source": "images/train/0001_bret-hart-chrome.jpg",
+      "width": 1400,
+      "height": 1004,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          12.098541259765625,
+          0,
+          1387.9014587402344,
+          1004,
+          0.9849392771720886
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0006_demo-front.jpg",
+      "width": 797,
+      "height": 1100,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          11.429204940795898,
+          21.978893280029297,
+          775.474739074707,
+          1023.2928085327148,
+          0.9855943918228149
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0008_Year-Manfucturer-Card-0199.jpg",
+      "width": 1100,
+      "height": 777,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          3.795013427734375,
+          0,
+          1096.0797309875488,
+          777,
+          0.8193802237510681
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0009_Year-Manfucturer-Card-0200.jpg",
+      "width": 1100,
+      "height": 783,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          16.360750198364258,
+          2.8592681884765625,
+          1083.3624076843262,
+          780.1407318115234,
+          0.8625199794769287
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0036_Year-Manfucturer-Card-0227.jpg",
+      "width": 1100,
+      "height": 775,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          13.345909118652344,
+          0,
+          1086.6540908813477,
+          775,
+          0.9578190445899963
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0037_Year-Manfucturer-Card-0228.jpg",
+      "width": 1100,
+      "height": 787,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          13.280134201049805,
+          0,
+          1086.6118144989014,
+          785.1131248474121,
+          0.9636117219924927
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0048_Year-Manfucturer-Card-0239.jpg",
+      "width": 1100,
+      "height": 785,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          12.15723991394043,
+          0,
+          1087.8427600860596,
+          785,
+          0.9703845977783203
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0049_Year-Manfucturer-Card-0240.jpg",
+      "width": 1100,
+      "height": 786,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          18.178529739379883,
+          0,
+          1081.6895008087158,
+          786,
+          0.9757081270217896
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0058_Year-Manfucturer-Card-0249.jpg",
+      "width": 1100,
+      "height": 792,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          14.329071044921875,
+          0,
+          1085.6709289550781,
+          792,
+          0.9277774095535278
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0059_Year-Manfucturer-Card-0250.jpg",
+      "width": 1100,
+      "height": 790,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          8.871326446533203,
+          2.4416184425354004,
+          1090.8792114257812,
+          787.5583815574646,
+          0.9381760358810425
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0061_Year-Manfucturer-Card-0252.jpg",
+      "width": 1100,
+      "height": 785,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          13.416824340820312,
+          0,
+          1086.5831756591797,
+          785,
+          0.9785614609718323
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0068_Year-Manfucturer-Card-0259.jpg",
+      "width": 1100,
+      "height": 784,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          10.668020248413086,
+          0,
+          1089.1302490234375,
+          784,
+          0.9782191514968872
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0069_Year-Manfucturer-Card-0260.jpg",
+      "width": 1100,
+      "height": 788,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          18.878135681152344,
+          0,
+          1081.1218643188477,
+          788,
+          0.9768348336219788
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0072_Year-Manfucturer-Card-0263.jpg",
+      "width": 1100,
+      "height": 789,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          6.884860992431641,
+          0.04154205322265625,
+          1092.293529510498,
+          788.9584579467773,
+          0.9545997977256775
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0073_Year-Manfucturer-Card-0264.jpg",
+      "width": 1100,
+      "height": 788,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          7.150688171386719,
+          1.7163372039794922,
+          1092.446584701538,
+          786.2836627960205,
+          0.9442869424819946
+        ]
+      ]
+    },
+    {
+      "source": "images/train/0076_Year-Manfucturer-Card-0267.jpg",
+      "width": 1100,
+      "height": 783,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          102.96900749206543,
+          2.209806442260742,
+          994.050874710083,
+          780.7901935577393,
+          0.9696990847587585
+        ]
+      ]
+    },
+    {
+      "source": "images/val/0005_demo-back.jpg",
+      "width": 798,
+      "height": 1097,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          11.706134605407716,
+          23.214541053771974,
+          765.2075492858887,
+          1057.3577014923098,
+          0.9804524183273315
+        ]
+      ]
+    },
+    {
+      "source": "images/val/0060_Year-Manfucturer-Card-0251.jpg",
+      "width": 1100,
+      "height": 794,
+      "accepted": true,
+      "true_positive": 1,
+      "false_positive": 0,
+      "false_negative": 0,
+      "boxes": [
+        [
+          11.997051239013672,
+          0.47039031982421875,
+          1087.9943466186523,
+          793.5296096801758,
+          0.9564099311828613
+        ]
+      ]
+    }
+  ],
+  "model_sha256": "5fea9362f93b584f3a85f493c7fdad43cc817d8107e95e45d891d99d39ef422b",
+  "dataset_sha256": "1381819594b9770304b982eab9de5f7d6c6181368243da4e00a4f529b408a80b"
+}

@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { expandFiles } from "./pipeline";
 import { validateUploadedImage } from "./validate";
 import { detectCards, rectifyCard, type CardDetection } from "./detect-sheet";
-import { identifyCard, identityLabel } from "./identify";
+import { identifyCard, identityLabel, missingPrintedFields } from "./identify";
 import { saveProcessedCard } from "./connectors/persist";
 import { notifyCardProcessed } from "./connectors/notify";
 import { putR2Object } from "./connectors/r2";
@@ -26,6 +26,7 @@ import {
   thumbnail,
 } from "./image-ops";
 import type { CardIdentity } from "./types";
+import { assessOcr } from "./ocr-quality";
 import { identityQuery, lookupCardPrices, type PriceQuote } from "./prices";
 
 export type Stage =
@@ -109,6 +110,7 @@ type Settings = {
   descratchLevel: DescratchLevel;
   exportFormat: "png" | "jpg" | "webp";
   exportQuality: number;
+  reviewThreshold: number;
 };
 
 const defaultSettings: Settings = {
@@ -117,6 +119,7 @@ const defaultSettings: Settings = {
   descratchLevel: "medium",
   exportFormat: "png",
   exportQuality: 92,
+  reviewThreshold: 80,
 };
 
 const pixels = new Map<string, ImageData>();
@@ -269,7 +272,17 @@ function emptyIdentity(): CardIdentity {
 
 export const useBatch = create<Store>((set, get) => ({
   settings: defaultSettings,
-  setSettings: (partial) => set({ settings: { ...get().settings, ...partial }, updatedAt: Date.now() }),
+  setSettings: (partial) => {
+    const settings = { ...get().settings, ...partial };
+    if (!Number.isFinite(settings.reviewThreshold) || settings.reviewThreshold < 0 || settings.reviewThreshold > 100) return;
+    set({ settings, updatedAt: Date.now(), cards: get().cards.map(card => {
+      const identity = card.identity;
+      if (!identity?.ocr) return card;
+      const missing = missingPrintedFields(identity);
+      return { ...card, identity: { ...identity, ocr: { ...identity.ocr,
+        ...assessOcr(identity.ocr.confidence, identity.rawText, missing, settings.reviewThreshold) } } };
+    }) });
+  },
   dropPhase: "idle",
   setDropPhase: (p) => set({ dropPhase: p }),
   batchId: crypto.randomUUID(),
@@ -527,6 +540,9 @@ export const useBatch = create<Store>((set, get) => ({
         warnings: card.warnings,
         status: card.stage,
         ocr_query: identityQuery(card.identity),
+        ocr_evidence: card.identity?.ocr ?? null,
+        ocr_raw_text: card.identity?.rawText ?? "",
+        filename_hints: card.identity?.filenameHints ?? null,
         price_median: card.prices?.medianUngraded ?? null,
         ebay_sold_url: card.prices?.ebaySoldUrl ?? null,
       });
@@ -747,7 +763,7 @@ async function emitDetectedCard(opts: {
   let orientationMethod = "layout";
   let identity: CardIdentity | undefined;
   try {
-    const idn = await identifyCard(rectified, filename, { vision: false });
+    const idn = await identifyCard(rectified, filename, { vision: false, reviewThreshold: get().settings.reviewThreshold });
     identity = idn.identity;
     if (idn.rotated) {
       oriented = rotateImage(rectified, 180);
@@ -767,6 +783,10 @@ async function emitDetectedCard(opts: {
     /* keep rectified */
   }
   const thumb = URL.createObjectURL(await encodeImage(thumbnail(oriented), "jpg", 0.8));
+  if (identity?.ocr) {
+    identity = { ...identity, ocr: { ...identity.ocr,
+      ...assessOcr(identity.ocr.confidence, identity.rawText, missingPrintedFields(identity), get().settings.reviewThreshold) } };
+  }
   const card: CardRecord = {
     id: cardId,
     sourceId,

@@ -5,9 +5,10 @@
 
 import { createSession, getOrt, withTimeout, type OrtSession } from "./ort";
 import type { TextBox } from "./ocr-det";
+import { aggregateConfidence, recognitionSize, type OcrLine } from "./ocr-quality";
 
 const HEIGHT = 48;
-const MAX_W = 320;
+const MAX_W = 1280; // Model exposes a dynamic width; keep foil/nameplate glyphs at 48px.
 let sessionReady: Promise<OrtSession | null> | null = null;
 let recDisabled = false;
 let charset: string[] | null = null;
@@ -51,9 +52,8 @@ function cropBox(src: ImageData, box: TextBox): ImageData {
 }
 
 function toRecTensor(src: ImageData): { tensor: Float32Array; width: number } {
-  const scale = HEIGHT / Math.max(1, src.height);
-  let tw = Math.max(8, Math.round(src.width * scale));
-  tw = Math.min(MAX_W, Math.ceil(tw / 8) * 8);
+  const size = recognitionSize(src.width, src.height, HEIGHT, MAX_W);
+  const tw = size.paddedWidth;
   const canvas = document.createElement("canvas");
   canvas.width = tw;
   canvas.height = HEIGHT;
@@ -68,7 +68,7 @@ function toRecTensor(src: ImageData): { tensor: Float32Array; width: number } {
   ctx.fillStyle = "#000";
   ctx.fillRect(0, 0, tw, HEIGHT);
   ctx.imageSmoothingEnabled = true;
-  ctx.drawImage(tmp, 0, 0, Math.min(tw, Math.round(src.width * scale)), HEIGHT);
+  ctx.drawImage(tmp, 0, 0, size.width, size.height);
   const pix = ctx.getImageData(0, 0, tw, HEIGHT).data;
   const plane = tw * HEIGHT;
   const tensor = new Float32Array(3 * plane);
@@ -132,15 +132,13 @@ function ctcDecode(data: Float32Array, dims: number[], dict: string[]): { text: 
   return { text: text.trim(), conf: n ? (score / n) * 100 : 0 };
 }
 
-export async function recognizeLines(src: ImageData, boxes: TextBox[]): Promise<{ text: string; conf: number }> {
-  if (typeof window === "undefined" || recDisabled) return { text: "", conf: 0 };
+export async function recognizeLines(src: ImageData, boxes: TextBox[]): Promise<{ text: string; conf: number | null; lines: OcrLine[] }> {
+  if (typeof window === "undefined" || recDisabled) return { text: "", conf: null, lines: [] };
   const session = await getSession();
-  if (!session) return { text: "", conf: 0 };
+  if (!session) return { text: "", conf: null, lines: [] };
   const dict = await loadCharset();
   const ort = await getOrt();
-  const parts: string[] = [];
-  let confSum = 0;
-  let confN = 0;
+  const lines: OcrLine[] = [];
   const ordered = [...boxes].sort((a, b) => (Math.abs(a.y - b.y) > Math.max(8, a.h * 0.6) ? a.y - b.y : a.x - b.x));
   for (const box of ordered.slice(0, 24)) {
     if (box.w < 8 || box.h < 8) continue;
@@ -156,13 +154,11 @@ export async function recognizeLines(src: ImageData, boxes: TextBox[]): Promise<
       if (!out) continue;
       const decoded = ctcDecode(out.data as Float32Array, out.dims, dict);
       if (decoded.text.length >= 2) {
-        parts.push(decoded.text);
-        confSum += decoded.conf;
-        confN++;
+        lines.push({ text: decoded.text, confidence: decoded.conf, box: { x: box.x, y: box.y, w: box.w, h: box.h } });
       }
     } catch {
       /* next line */
     }
   }
-  return { text: parts.join("\n"), conf: confN ? confSum / confN : 0 };
+  return { text: lines.map(line => line.text).join("\n"), conf: aggregateConfidence(lines), lines };
 }

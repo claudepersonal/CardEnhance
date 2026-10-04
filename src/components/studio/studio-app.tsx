@@ -411,6 +411,13 @@ function BatchBar({
             <option value={4}>4</option>
           </select>
         </label>
+        <label className="flex items-center gap-2">
+          OCR review below
+          <input type="number" min={0} max={100} step={1}
+            className="h-10 w-20 rounded-lg border border-border bg-elevated px-2 text-fg"
+            value={settings.reviewThreshold}
+            onChange={(event) => { if (event.target.value !== "") setSettings({ reviewThreshold: Number(event.target.value) }); }} />
+        </label>
       </div>
       {exportOpen ? (
         <ExportDialog currentId={currentId} onClose={() => setExportOpen(false)} />
@@ -659,6 +666,33 @@ function Workspace({ card }: { card: CardRecord }) {
         ) : null}
       </div>
       <ComparePane leftUrl={leftUrl} rightUrl={rightUrl} left={left} right={right} />
+      {card.identity?.ocr ? (
+        <section aria-label="OCR review" className="border-t border-border pt-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={cn("rounded px-2 py-1 text-xs font-medium", card.identity.ocr.status === "READY" ? "bg-accent/10 text-accent" : "bg-elevated text-fg")}>
+              {card.identity.ocr.status === "READY" ? "OCR ready" : "Review OCR"}
+            </span>
+            <span className="text-xs text-muted">
+              {card.identity.ocr.confidence == null ? "Score unmeasured" : `OCR score ${card.identity.ocr.confidence.toFixed(1)} / 100`}
+              {" · "}{card.identity.engine}{" · threshold "}{card.identity.ocr.threshold}
+            </span>
+          </div>
+          {card.identity.ocr.reasons.length ? <p className="mt-2 text-xs text-muted">{card.identity.ocr.reasons.join(" · ")}</p> : null}
+          <details className="mt-2">
+            <summary className="cursor-pointer text-xs text-accent">Printed text and OCR passes</summary>
+            <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-elevated p-3 text-xs">{card.identity.rawText || "No printed text was read"}</pre>
+            {card.identity.ocr.passes.map((pass, index) => (
+              <div key={index} className="mt-2 border-t border-border pt-2 text-xs">
+                <p>{pass.variant}{pass.variant === card.identity?.ocr?.selectedVariant ? " · selected" : ""} · {pass.rotation}° · {pass.confidence == null ? "unmeasured" : `${pass.confidence.toFixed(1)} / 100`}</p>
+                {pass.lines.map((line, lineIndex) => <p key={lineIndex} className="mt-1 break-words text-muted">
+                  {line.text}{line.box ? ` · box (${Math.round(line.box.x)}, ${Math.round(line.box.y)}, ${Math.round(line.box.w)}, ${Math.round(line.box.h)})` : ""}
+                </p>)}
+              </div>
+            ))}
+            {card.identity.filenameHints && Object.keys(card.identity.filenameHints).length ? <p className="mt-2 text-xs text-muted">Filename hints (not OCR): {JSON.stringify(card.identity.filenameHints)}</p> : null}
+          </details>
+        </section>
+      ) : null}
       <div className="grid gap-2 sm:grid-cols-2">
         <label className="flex items-center gap-2 text-xs text-muted">
           Before

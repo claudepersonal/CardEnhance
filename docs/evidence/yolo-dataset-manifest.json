@@ -1,0 +1,600 @@
+{
+  "counts": {
+    "train": 66,
+    "val": 18
+  },
+  "duplicates_removed": 0,
+  "seed": 42,
+  "label_provenance": "repository_heuristic_polygons",
+  "validation_scope": "development label agreement; not independent human annotations",
+  "records": [
+    {
+      "source": "images/train/0001_bret-hart-chrome.jpg",
+      "sha256": "3c4b04a292018cc4065b307904b3f813dbdc216651fc17e814bb8c8262b11452",
+      "group": "source-bret-hart-chrome",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0002_chelsea-green-front.jpg",
+      "sha256": "10a6c24be0405acfb80c8c577ea28bed64f2003ee1afea103d70288b2dc38d17",
+      "group": "source-chelsea-green",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0003_chelsea-green-table.jpg",
+      "sha256": "5e72f9995549638c56a0e50df241e6af4906a81343fc275c303d6c76b4d8a4d5",
+      "group": "source-chelsea-green-table",
+      "split": "train",
+      "label": "0 0.504436 0.502486 0.662585 0.262263"
+    },
+    {
+      "source": "images/train/0004_darby-allin-front.jpg",
+      "sha256": "53a38e61280f0939045f59c5f07b1e82ba9a2493cfd457611fd98dca50996d1b",
+      "group": "source-darby-allin",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0006_demo-front.jpg",
+      "sha256": "ffab5d1585a25d1a73c7e8a54a4aedf80c8df07cee6e2639bca007258a782ee2",
+      "group": "source-demo",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0007_Year-Manfucturer-Card-0198.jpg",
+      "sha256": "c12bd1ac7efdb85a3c8f540a6667af4a77291af664dd03f69374475843d2857e",
+      "group": "source-Year-Manfucturer-Card-0198",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0008_Year-Manfucturer-Card-0199.jpg",
+      "sha256": "a21f9a6e0b06c9966ca2cee265600e9ef4a6766d170717fb80a39061e823711b",
+      "group": "scanner-pair-0",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0009_Year-Manfucturer-Card-0200.jpg",
+      "sha256": "ddf2fbae97416fc06849e85bc08ae978bfc1ace7995cdddc9fcaeb5d212cac36",
+      "group": "scanner-pair-0",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0011_Year-Manfucturer-Card-0202.jpg",
+      "sha256": "f84a5c4e73f33a8ad8ce5453ab37371f53152e5370e824596964dc0f5e4f0c9d",
+      "group": "scanner-pair-1",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0012_Year-Manfucturer-Card-0203.jpg",
+      "sha256": "699cf3d75cfb9f9b3f14ea2d0f048195d2e95b104c744789905d5ae58afce356",
+      "group": "scanner-pair-2",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0013_Year-Manfucturer-Card-0204.jpg",
+      "sha256": "92760504398b0d8ec4c195ce4516dbb95b94699bc8a6fdb419f2f95ae6b6194b",
+      "group": "scanner-pair-2",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0014_Year-Manfucturer-Card-0205.jpg",
+      "sha256": "1958470cb6a1bc9eb2abd1821281a07dc1f2a71a2ea955011722e2038db5a37a",
+      "group": "scanner-pair-3",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0016_Year-Manfucturer-Card-0207.jpg",
+      "sha256": "5e6b3d5955146303bf0d91fe264770a560df2731bbe7e02519a0ee73e0455a74",
+      "group": "scanner-pair-4",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0017_Year-Manfucturer-Card-0208.jpg",
+      "sha256": "5f245979e92d802cfd5a459f2bf39b7a4f301ee563087578e663636a155c195c",
+      "group": "scanner-pair-4",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0018_Year-Manfucturer-Card-0209.jpg",
+      "sha256": "9c93135c879b7215828d80e8ca8b59c185f0a736cc6915de24acd17990ed052b",
+      "group": "scanner-pair-5",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0019_Year-Manfucturer-Card-0210.jpg",
+      "sha256": "792c9b31bd5c1096ca5133dead291c4a0ffad8aacf436ec2ee3d175363f2f2c4",
+      "group": "scanner-pair-5",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0021_Year-Manfucturer-Card-0212.jpg",
+      "sha256": "cdde5827b84695229d29ec7ca0da1c8dbb1c61ac818a21dd110fb5190d049b6d",
+      "group": "scanner-pair-6",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0022_Year-Manfucturer-Card-0213.jpg",
+      "sha256": "44d4927fa5c642c5f403974d44ea92a5f2dfb0b840bad92f16e9fb36c5376925",
+      "group": "scanner-pair-7",
+      "split": "train",
+      "label": "0 0.504533 0.502407 0.662185 0.261972"
+    },
+    {
+      "source": "images/train/0023_Year-Manfucturer-Card-0214.jpg",
+      "sha256": "16ccaff92b2f8a19f1d0c94b6e723fdb02dbaa8b455f0ab5736a950bf29d35f8",
+      "group": "scanner-pair-7",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0024_Year-Manfucturer-Card-0215.jpg",
+      "sha256": "eb38b8d34b4874465bad3b7bde4ba900b4f8468aeacbf76593e63c0943148400",
+      "group": "scanner-pair-8",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0026_Year-Manfucturer-Card-0217.jpg",
+      "sha256": "056120305042a50990e621f3603c084b8493d3160610e6c5784db3c69983bd94",
+      "group": "scanner-pair-9",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0027_Year-Manfucturer-Card-0218.jpg",
+      "sha256": "f5eeefacd55e3c5b16a2615f5b519f314b7eefe43519c93ed477ffafd0b1c46c",
+      "group": "scanner-pair-9",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0028_Year-Manfucturer-Card-0219.jpg",
+      "sha256": "35859bd7cdd1ff83e771e66846d658ac1d7bece093985497b4455e7bb43ca9c7",
+      "group": "scanner-pair-10",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0029_Year-Manfucturer-Card-0220.jpg",
+      "sha256": "a653262f418b701dcbda60af3b9974ab8a44d996b752717a4a37de8533cd775d",
+      "group": "scanner-pair-10",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0031_Year-Manfucturer-Card-0222.jpg",
+      "sha256": "0ef8daa00b1fb0bf02f332807bca9273695b992c139a9c6c0ebb8d0a7e456dd6",
+      "group": "scanner-pair-11",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0032_Year-Manfucturer-Card-0223.jpg",
+      "sha256": "9da813a1486eee28d8ba71e02a1fd521558bfe2abe4bb3746d4ab6f5ffc134e5",
+      "group": "scanner-pair-12",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0033_Year-Manfucturer-Card-0224.jpg",
+      "sha256": "22f909a4843245d7b3aa7d923173df115200939d0ca819d16bf313db7f06b802",
+      "group": "scanner-pair-12",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0034_Year-Manfucturer-Card-0225.jpg",
+      "sha256": "ea6122406f255d29b70761b59028be5cf8e2858a6e0d30c922d77ba4c6a8fb71",
+      "group": "scanner-pair-13",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0036_Year-Manfucturer-Card-0227.jpg",
+      "sha256": "842dcac747a61527e1b6e16858a8f48545eeb0db1489ff29f76811b610ebec23",
+      "group": "scanner-pair-14",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0037_Year-Manfucturer-Card-0228.jpg",
+      "sha256": "b3830ee2e24c69e94e59b5833387d95e2dfa3cf822a75b94f50e783041f51aa3",
+      "group": "scanner-pair-14",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0038_Year-Manfucturer-Card-0229.jpg",
+      "sha256": "41922fa562860e551139e57f709304cf4e014c61d81de6c0a53cd477f31900b5",
+      "group": "scanner-pair-15",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0039_Year-Manfucturer-Card-0230.jpg",
+      "sha256": "2e19622a3ca145dcf02fbcb6c847bc3d785ae40f99985e6952c557f1a7ebe85d",
+      "group": "scanner-pair-15",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0041_Year-Manfucturer-Card-0232.jpg",
+      "sha256": "a981c17e05bdb0eb1db5f7d3dd1e7c68ebdd76310a5a4b6fddf2e18a42512165",
+      "group": "scanner-pair-16",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0042_Year-Manfucturer-Card-0233.jpg",
+      "sha256": "e0961e1f8122897a6bf90430f974cbef722772d03d452623dac5ec0ad9fcb21c",
+      "group": "scanner-pair-17",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0043_Year-Manfucturer-Card-0234.jpg",
+      "sha256": "5b092b59a5b55b2cc3f1f8877bae2e42e5e91a9acf5ae2b93c4f07150173e769",
+      "group": "scanner-pair-17",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0044_Year-Manfucturer-Card-0235.jpg",
+      "sha256": "9887d1064187f77928f01006710ad6e4036802b414a635020d294121a81160db",
+      "group": "scanner-pair-18",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0046_Year-Manfucturer-Card-0237.jpg",
+      "sha256": "bae1f69f3b2610c9cbf53bc2d284a1e825f8d7c0643d4570d90cd5dddf85fb37",
+      "group": "scanner-pair-19",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0047_Year-Manfucturer-Card-0238.jpg",
+      "sha256": "d0cc7146d013d3da7c5d15f719fc9bd6fc996fdf97e9258460f66ca6d2cc5071",
+      "group": "scanner-pair-19",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0048_Year-Manfucturer-Card-0239.jpg",
+      "sha256": "994d11f962cb2c996106469410793ebe63e8d00f9dfe3200d33f66d4c4727c2e",
+      "group": "scanner-pair-20",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0049_Year-Manfucturer-Card-0240.jpg",
+      "sha256": "267151abf3a879494ce7f404a06dcce4b39d93f66331f5bddc2d2d1ce7fb47e0",
+      "group": "scanner-pair-20",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0051_Year-Manfucturer-Card-0242.jpg",
+      "sha256": "b25c5716b21e131ee23105b4394a9de7c8c5fd0253e344491848ece095934710",
+      "group": "scanner-pair-21",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0052_Year-Manfucturer-Card-0243.jpg",
+      "sha256": "4687a559e0f4d39c112444049af0d314e1104fef5c343ea7082a9a61375f22b9",
+      "group": "scanner-pair-22",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0053_Year-Manfucturer-Card-0244.jpg",
+      "sha256": "b5415677b94f859eaf246ccd512a8ba57f27a2cbb31125a1c8f2cb21936260e5",
+      "group": "scanner-pair-22",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0054_Year-Manfucturer-Card-0245.jpg",
+      "sha256": "8932563a68a467d337d2b02cc64e8d187758699b0fc3e70ba262fb02b10df226",
+      "group": "scanner-pair-23",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0056_Year-Manfucturer-Card-0247.jpg",
+      "sha256": "112cd006f93cf4b1ac7dc21cea4fed7f044c189dc9d293494000f70878b8114e",
+      "group": "scanner-pair-24",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0057_Year-Manfucturer-Card-0248.jpg",
+      "sha256": "b75c02fd9d821de10b6f1f393b84600ac0681c0ab9deba35d0c0c3ffc427a61a",
+      "group": "scanner-pair-24",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0058_Year-Manfucturer-Card-0249.jpg",
+      "sha256": "15adc670b88970213db157e96ff5095236abdaf93940ee408530f184e8aa760c",
+      "group": "scanner-pair-25",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0059_Year-Manfucturer-Card-0250.jpg",
+      "sha256": "f12e014e5dd947dcaff421a05af85bbde39e0ef56dbcc244461f383d143344fa",
+      "group": "scanner-pair-25",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0061_Year-Manfucturer-Card-0252.jpg",
+      "sha256": "5c178026bb545470f5ddabeffef77b91e0043c0d03d60998faa26b7e0b0ff034",
+      "group": "scanner-pair-26",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0062_Year-Manfucturer-Card-0253.jpg",
+      "sha256": "f76aea4a824e16011f8fe2516e14b1e944c37b27d3d8d35fb4e55cb9c2b2f925",
+      "group": "scanner-pair-27",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0063_Year-Manfucturer-Card-0254.jpg",
+      "sha256": "cd987036f030b78291e3c1d827eec08007a1e469d9e8f070a9ceac6dbde8a617",
+      "group": "scanner-pair-27",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0064_Year-Manfucturer-Card-0255.jpg",
+      "sha256": "9eefcb0c1dd5d7b273f20817243a894eb60bbdec7eeee9cc8e932aa3b551394b",
+      "group": "scanner-pair-28",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0066_Year-Manfucturer-Card-0257.jpg",
+      "sha256": "9439c46c05360a0dc550c3c1e68026731018f0cb883c0f1bf887bd75d05223f5",
+      "group": "scanner-pair-29",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0067_Year-Manfucturer-Card-0258.jpg",
+      "sha256": "75741cb4b9195fb2bbda259545a29c650a2e9361455b2b9b78547a898cc7d179",
+      "group": "scanner-pair-29",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0068_Year-Manfucturer-Card-0259.jpg",
+      "sha256": "0e0a571007665ee707aab502d332ea046aa028b37aef842db947f765ff1872d7",
+      "group": "scanner-pair-30",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0069_Year-Manfucturer-Card-0260.jpg",
+      "sha256": "c44d6f5e01e784a7531a53ff3ec6836b99b7fd1112009fe9097b5e67b820c6c2",
+      "group": "scanner-pair-30",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0071_Year-Manfucturer-Card-0262.jpg",
+      "sha256": "abbdcd03262b51198c24542b23a4d894c353d8fd0e204284a7bbe20a22055523",
+      "group": "scanner-pair-31",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0072_Year-Manfucturer-Card-0263.jpg",
+      "sha256": "f0a149a58e2904d203de8376e1e7552e8e67d2db49345c5cf8501d0e6272d48b",
+      "group": "scanner-pair-32",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0073_Year-Manfucturer-Card-0264.jpg",
+      "sha256": "c8c6a1cb99c0565fe066b979daa5fbcf8c76a2d98b8644ce466095f5ffad949e",
+      "group": "scanner-pair-32",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0074_Year-Manfucturer-Card-0265.jpg",
+      "sha256": "f20453b94f7df8bdb899acf211dcc0936f2c63e7c87e80cfc1f1d17f14d79432",
+      "group": "scanner-pair-33",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0076_Year-Manfucturer-Card-0267.jpg",
+      "sha256": "8ca4e01cfc110391daecbbf10e9fa709e49ec5403d6a64a46dd7993da0f94f44",
+      "group": "scanner-pair-34",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0077_jamie-hayter-mighty-ones.jpg",
+      "sha256": "765e44c536e7673f16a72aef5ad41d24e89e9aefc23cecc7d14fffa4de77224c",
+      "group": "source-jamie-hayter-mighty-ones",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0078_kofi-kingston-prizm.jpg",
+      "sha256": "ffd056d899419c375fb5936f2c8c074a93663d49e544d5adf52cce327b8e9b6c",
+      "group": "source-kofi-kingston-prizm",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0079_lola-vice-chrome.jpg",
+      "sha256": "3e67ad89b898cd21606a76ce0c46ca8a6e1d27ec210cd7cd348334345fae0d03",
+      "group": "source-lola-vice-chrome",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0081_mina-shirakawa-dazzlers.jpg",
+      "sha256": "1b9ee22147fa66d366cbaa21d2341359730a3cf0115156dfbed91c6d926418e1",
+      "group": "source-mina-shirakawa-dazzlers",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0082_toni-timeline-front.jpg",
+      "sha256": "4a016687a8ca7317e4c41ada97025b88a8010bc56c396f684e9b7c8c4de6787f",
+      "group": "source-toni-timeline",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/train/0083_willow-harley-tag.jpg",
+      "sha256": "642f1038c9da86b761008260512abcbd68d4a2fa567940579d2077e77fff1e9f",
+      "group": "source-willow-harley-tag",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0000_athena-pyro.jpg",
+      "sha256": "32d546010b5014f0f6a38eceb07166803c9627fde19a3ffc252de9c7992d85f8",
+      "group": "source-athena-pyro",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0005_demo-back.jpg",
+      "sha256": "1e6cd77c4e0919b7b06c89f9a2206eee6fd2f7ab1bbd9e6e49982e8503b0a405",
+      "group": "source-demo",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0010_Year-Manfucturer-Card-0201.jpg",
+      "sha256": "2d2035c7b36a073b2303668434d8a6f5873fe39463395dc28a125f225a449317",
+      "group": "scanner-pair-1",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0015_Year-Manfucturer-Card-0206.jpg",
+      "sha256": "7c9740c79b19e6b4e21cfdb834b948b67fa523c7762ac39b71a5f1ef5ba16ff0",
+      "group": "scanner-pair-3",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0020_Year-Manfucturer-Card-0211.jpg",
+      "sha256": "0562d230c6660a2ac2a5ea6861f37954d82332392a40b41823c2c0865fc6370f",
+      "group": "scanner-pair-6",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0025_Year-Manfucturer-Card-0216.jpg",
+      "sha256": "6ae89c298f3500af473199481ce8c467f892b1e13f3905518781fc17873974c9",
+      "group": "scanner-pair-8",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0030_Year-Manfucturer-Card-0221.jpg",
+      "sha256": "7390a5e31b3d0812230d52edda70dd06500f5b30a6b1c734230fffb785b63e3a",
+      "group": "scanner-pair-11",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0035_Year-Manfucturer-Card-0226.jpg",
+      "sha256": "f473ea8f4da3f4d58bc51fe2d7ffc7da59f2b373840e12a6544dab22d9691348",
+      "group": "scanner-pair-13",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0040_Year-Manfucturer-Card-0231.jpg",
+      "sha256": "ab58c6a4baeab9afa112657a8be73cb82e2ebe334e8faf7ea013135d26431782",
+      "group": "scanner-pair-16",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0045_Year-Manfucturer-Card-0236.jpg",
+      "sha256": "9541a6b2d181e458fc8f316c7410849f9edf5a8081c172dc5c8aa46f7ed4930e",
+      "group": "scanner-pair-18",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0050_Year-Manfucturer-Card-0241.jpg",
+      "sha256": "04e260ee4daa81da6d6604b4419effd67c400f91cb18f56f19af8f03b9c854b3",
+      "group": "scanner-pair-21",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0055_Year-Manfucturer-Card-0246.jpg",
+      "sha256": "9fa42e58a5bdebd065311ac15ee14825bbfa96957552059229f358904f8b22f9",
+      "group": "scanner-pair-23",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0060_Year-Manfucturer-Card-0251.jpg",
+      "sha256": "062c44692929bb92a20da17bd0a4e13eeba3d9c32d3cc51c2efa64daf31111c4",
+      "group": "scanner-pair-26",
+      "split": "val",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0065_Year-Manfucturer-Card-0256.jpg",
+      "sha256": "4066716b13fb1ab4beea9d6b2b342420bbe7312942212ded448fac0171c33ec2",
+      "group": "scanner-pair-28",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0070_Year-Manfucturer-Card-0261.jpg",
+      "sha256": "47efbd1017d2ee2fdc2be61bc2c4add913fe24aa68ee07d56cdf8b89b923c1e5",
+      "group": "scanner-pair-31",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0075_Year-Manfucturer-Card-0266.jpg",
+      "sha256": "07d5451df614f2150a7780c958bb3531d4352552a6bcb8c8077d6c1c0a673950",
+      "group": "scanner-pair-33",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    },
+    {
+      "source": "images/val/0080_mina-shirakawa-dazzlers-back.jpg",
+      "sha256": "21c378cedc8e93fefb6382dc7197a376b90441757443efd5f20b490d12da4168",
+      "group": "source-mina-shirakawa-dazzlers",
+      "split": "train",
+      "label": "0 0.500000 0.500000 0.976000 0.976000"
+    }
+  ]
+}

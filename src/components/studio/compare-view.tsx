@@ -59,7 +59,7 @@ function IdentityChips({
       ) : null}
       {identity && identity.confidence > 0 ? (
         <span className="font-mono text-[10px] text-muted tabular-nums">
-          {Math.round(identity.confidence * 100)}% id
+          OCR score {Math.round(identity.confidence * 100)} / 100
         </span>
       ) : null}
     </div>

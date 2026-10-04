@@ -1,0 +1,9 @@
+# Install with uv pip --torch-backend cpu for CPU training.
+ultralytics==8.4.173
+torch==2.14.1
+torchvision==0.29.1
+numpy==2.5.3
+pillow==12.3.0
+onnx==1.23.1
+onnxruntime==1.30.0
+onnxslim==0.1.97
