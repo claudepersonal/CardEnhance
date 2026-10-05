@@ -1,0 +1,42 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Loading http://127.0.0.1:8080/",
+      "hasCanvas": false,
+      "bodyTextLen": 161,
+      "bodyTextHash": "f52805b6f7837faaf070296a77991796245f713ec3d2fe6bdcd7952611c89419",
+      "bodyTextPrefix": "CardEnhance Restore · Compare · Export DashboardStudioLibraryAud",
+      "horizontalOverflow": false,
+      "consoleErrors": [
+        "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for one of the following reasons:\n1. You might have mismatching versions of React and the renderer (such as React DOM)\n2. You might be breaking the Rules of Hooks\n3. You might have more than one copy of React in the same app\nSee https://react.dev/link/invalid-hook-call for tips about how to debug and fix this problem.",
+        "%o\n\n%s\n\n%s\n TypeError: Cannot read properties of null (reading 'useContext')\n    at exports.useContext (http://127.0.0.1:8080/node_modules/.vite/deps/react.js?v=7ac5cf8a:706:22)\n    at useRouter (http://127.0.0.1:8080/node_modules/@tanstack/react-router/dist/esm/useRouter.js?v=7ac5cf8a:16:24)\n    at useTags (http://127.0.0.1:8080/node_modules/@tanstack/react-router/dist/esm/headContentUtils.js?v=7ac5cf8a:131:17)\n    at HeadContent (http://127.0.0.1:8080/node_modules/@tanstack/react-router/dist/esm/HeadContent.dev.js?v=7ac5cf8a:21:15)\n    at Object.react_stack_bottom_frame (http://127.0.0.1:8080/node_modules/.vite/deps/react-dom_client.js?v=e8abfbba:12866:12)\n    at renderWithHooks (http://127.0.0.1:8080/node_modules/.vite/deps/react-dom_client.js?v=e8abfbba:4213:19)\n    at updateFunctionComponent (http://127.0.0.1:8080/node_modules/.vite/deps/react-dom_client.js?v=e8abfbba:5569:16)\n    at beginWork (http://127.0.0.1:8080/node_modules/.vite/deps/react-dom_client.js?v=e8abfbba:6140:20)\n    at runWithFiberInDEV (http://127.0.0.1:8080/node_modules/.vite/deps/react-dom_client.js?v=e8abfbba:851:66)\n    at performUnitOfWork (http://127.0.0.1:8080/node_modules/.vite/deps/react-dom_client.js?v=e8abfbba:8429:92) The above error occurred in the <HeadContent> component. React will try to recreate this component tree from scratch using the error boundary you provided, CatchBoundary."
+      ],
+      "pageErrors": [],
+      "screenshot": "/home/runner/work/CardEnhance/CardEnhance/docs/evidence/runtime/browser.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "CardEnhance",
+      "hasCanvas": false,
+      "bodyTextLen": 165,
+      "bodyTextHash": "ae52abe6bd28b6d905ebcd28c85cc519fcffd0abc4f5a33cfed78d6f5ca7a0f3",
+      "bodyTextPrefix": "CardEnhance RESTORE · COMPARE · EXPORT Dashboard Studio Library ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/home/runner/work/CardEnhance/CardEnhance/docs/evidence/runtime/browser-mobile.png"
+    }
+  },
+  "brandWarnings": [
+    "BRAND NOTE: no custom public/og.jpg — the platform will serve the og.grok.me placeholder. Custom cards are the default for games of every kind (DOM board/word games included), whimsical apps, creative tools, and brand-forward pages — only plain utilities (converters, CRUD trackers, admin dashboards) keep the placeholder. If this app is not a plain utility, finish the brand-asset pass per /workspace/.grok/skills/og/SKILL.md."
+  ],
+  "authWarnings": [],
+  "verdictFile": "/home/runner/work/CardEnhance/CardEnhance/docs/evidence/runtime/browser.json"
+}
