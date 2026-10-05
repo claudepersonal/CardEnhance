@@ -1,0 +1,127 @@
+name: Codex coding and validation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: codex-coding-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  coding:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Prepare evidence and Git identity
+        run: |
+          mkdir -p "$RUNNER_TEMP/codex-results" docs/evidence
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git rev-parse HEAD > "$RUNNER_TEMP/codex-results/base-commit.txt"
+
+      - name: Install JavaScript dependencies
+        run: |
+          set -o pipefail
+          npm ci 2>&1 | tee "$RUNNER_TEMP/codex-results/npm-ci.log"
+
+      - name: Install browser runtime
+        run: |
+          set -o pipefail
+          npx playwright install --with-deps chromium 2>&1 | tee "$RUNNER_TEMP/codex-results/browser-install.log"
+
+      - name: Validate Codex credential availability
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo 'BLOCKED: repository secret OPENAI_API_KEY is required.' | tee "$RUNNER_TEMP/codex-results/prerequisites.txt"
+            exit 1
+          fi
+
+      - name: Implement and verify repository changes
+        uses: openai/codex-action@86365089eb2b84e0a8fb0717b304f8bdcb13b20e
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CODEX_BASE_REF: ${{ github.ref_name }}
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          sandbox: danger-full-access
+          safety-strategy: drop-sudo
+          output-file: ${{ runner.temp }}/codex-results/final-message.md
+          prompt: |
+            Complete the CardEnhance model, review-controls, and formula validation work.
+            Read repository instructions and current source before editing. Keep task
+            instructions separate from status reports. Install necessary dependencies
+            using repository manifests; record versions and installation failures.
+
+            Treat earlier test counts and review conclusions as unverified.
+            Run npm run typecheck, npm run lint, npm test, npm run check:auth,
+            and npm run build, as defined in package.json. Discover any relevant
+            Python checks in the repository instead of inventing test commands.
+            Record every command, exit status, warnings, failures, and skipped check
+            under docs/evidence and $RUNNER_TEMP/codex-results. Never report missing
+            tests as passed. Build without production database credentials and
+            record skipped migrations separately. Do not deploy.
+
+            Validate actual exported model precision and recall at the application's
+            exact confidence threshold, derived from current source. Match application
+            preprocessing, decoding, filters, NMS and threshold inclusivity. Record
+            TP/FP/FN, matching IoU, dataset membership, provenance and model SHA-256.
+            Label optimal-F1 metrics separately with their selected threshold.
+            Do not substitute mAP or optimal-F1 precision/recall for fixed-threshold
+            measurements. Use repository-relative paths instead of old scratch paths.
+            Hash actual model files, never directories or Git LFS pointer text.
+
+            Complete browser verification and the independent benchmark when required
+            data and runtime are available. Inspect scripts/browser-smoke.mjs and its
+            output-path guard before use; make paths repository-relative if needed
+            while preserving containment checks. Capture desktop/mobile screenshots,
+            console errors, HTTP status and actual verdicts. Independent benchmark
+            labels must be independently verified and disjoint from training/tuning;
+            auto-generated training/validation labels do not qualify. Document missing
+            prerequisites without claiming those checks passed. Do not fabricate
+            formula results or reconstruct unavailable changes from status prose.
+
+            Commit on a new codex/validation-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}
+            branch, push it, and create a draft PR with gh using GH_TOKEN. Use
+            CODEX_BASE_REF as the base. Include available model weights, review
+            controls, formula results and reproducible validation records; explicitly
+            document unavailable deliverables. Stage only intended files, never secrets.
+            Verify the remote commit and SHA-256 of model files in a fresh checkout
+            against tested files. Record verified commit/hash receipts outside the
+            commit they describe to avoid circular hashes. A push or PR authorization
+            failure is unresolved work, not success. Do not merge. Report the PR URL,
+            actual check results and unresolved work in the final message.
+
+      - name: Upload results and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-results-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            ${{ runner.temp }}/codex-results/
+            models/card-det/
+            models/card-seg/
+            public/models/card-det.onnx
+            docs/evidence/

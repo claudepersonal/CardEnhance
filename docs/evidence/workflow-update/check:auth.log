@@ -1,0 +1,6 @@
+npm warn Unknown env config "http-proxy". This will stop working in the next major version of npm.
+
+> check:auth
+> node scripts/check-auth-invariant.mjs
+
+[auth-invariant] could not read the dev server's resolved VITE_AUTH_ENABLED
