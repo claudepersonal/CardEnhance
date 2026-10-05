@@ -2,6 +2,9 @@ name: Codex coding and validation
 
 on:
   workflow_dispatch:
+  push:
+    branches: [codex/coding-workflow-evidence-20261005]
+    paths: [.github/workflows/codex-coding.yml]
 
 permissions:
   contents: write
