@@ -36,7 +36,14 @@ try {
   const page = await browser.newPage();
   await page.route("**/models/yolo26n.onnx", (r) => r.abort());
   await page.route("**/models/yolov8n.onnx", (r) => r.abort());
-  await page.goto("http://127.0.0.1:8080/__app-env");
+  await page.route("**/__yolo_validation", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "text/html",
+      body: "<!doctype html><html><body>YOLO validation</body></html>",
+    }),
+  );
+  await page.goto("http://127.0.0.1:8080/__yolo_validation");
   for (const file of readdirSync(report.dataset)
     .filter((x) => x.endsWith(".jpg"))
     .sort()) {

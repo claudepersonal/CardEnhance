@@ -50,7 +50,7 @@ jobs:
           set -o pipefail
           npx playwright install --with-deps chromium 2>&1 | tee "$RUNNER_TEMP/codex-results/browser-install.log"
 
-      - name: Run deterministic checks without API credentials
+      - name: Run deterministic browser and YOLO checks without API credentials
         continue-on-error: true
         run: |
           mkdir -p docs/evidence/runtime
