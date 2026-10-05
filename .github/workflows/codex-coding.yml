@@ -50,6 +50,38 @@ jobs:
           set -o pipefail
           npx playwright install --with-deps chromium 2>&1 | tee "$RUNNER_TEMP/codex-results/browser-install.log"
 
+      - name: Run deterministic checks without API credentials
+        continue-on-error: true
+        run: |
+          mkdir -p docs/evidence/runtime
+          npm run dev -- --host 127.0.0.1 > docs/evidence/runtime/dev.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..60}; do
+            if curl -fsS http://127.0.0.1:8080/__app-env > /dev/null; then break; fi
+            sleep 2
+          done
+          set +e
+          result=0
+          for check in typecheck lint test check:auth build; do
+            name="${check//:/-}"
+            npm run "$check" > "docs/evidence/runtime/$name.log" 2>&1
+            code=$?
+            echo "$check exit=$code" | tee -a docs/evidence/runtime/checks.txt
+            if [ "$code" -ne 0 ]; then result=1; fi
+          done
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080/ docs/evidence/runtime/browser.png > docs/evidence/runtime/browser.log 2>&1
+          code=$?
+          echo "browser exit=$code" | tee -a docs/evidence/runtime/checks.txt
+          if [ "$code" -ne 0 ]; then result=1; fi
+          node scripts/validate-yolo-browser.mjs > docs/evidence/runtime/yolo.log 2>&1
+          code=$?
+          echo "yolo exit=$code" | tee -a docs/evidence/runtime/checks.txt
+          cat docs/evidence/runtime/yolo-fixed-threshold.json
+          if [ "$code" -ne 0 ]; then result=1; fi
+          cat docs/evidence/runtime/checks.txt >> "$GITHUB_STEP_SUMMARY"
+          exit "$result"
+
       - name: Validate Codex credential availability
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
