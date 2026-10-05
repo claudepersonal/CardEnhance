@@ -1,0 +1,8 @@
+{
+  "yaml_parse": "PASS",
+  "embedded_bash_syntax": "PASS",
+  "action_inputs": "PASS",
+  "action_commit": "86365089eb2b84e0a8fb0717b304f8bdcb13b20e",
+  "workflow_sha256": "d01f27fd3df90b22bb4877cec8b8fdf884b00428161e4fd38f5f192c22fb85bd",
+  "runtime_execution": "NOT_RUN"
+}
