@@ -1,0 +1,27 @@
+[
+  {
+    "command": "npm run typecheck",
+    "exit_code": 0,
+    "log": "docs/evidence/workflow-update/typecheck.log"
+  },
+  {
+    "command": "npm run lint",
+    "exit_code": 0,
+    "log": "docs/evidence/workflow-update/lint.log"
+  },
+  {
+    "command": "npm test",
+    "exit_code": 0,
+    "log": "docs/evidence/workflow-update/test.log"
+  },
+  {
+    "command": "npm run check:auth",
+    "exit_code": 2,
+    "log": "docs/evidence/workflow-update/check:auth.log"
+  },
+  {
+    "command": "npm run build",
+    "exit_code": 0,
+    "log": "docs/evidence/workflow-update/build.log"
+  }
+]

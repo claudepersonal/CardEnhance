@@ -1,0 +1,17 @@
+[
+  {
+    "path": "public/models/card-det.onnx",
+    "bytes": 10604059,
+    "sha256": "8cf1b157369415f3b810d8e8ce2b9647ed48080a150c0de0d842497c9ed31d3d"
+  },
+  {
+    "path": "models/card-seg/v1/best.onnx",
+    "bytes": 10604059,
+    "sha256": "8cf1b157369415f3b810d8e8ce2b9647ed48080a150c0de0d842497c9ed31d3d"
+  },
+  {
+    "path": "models/card-seg/v1/best.pt",
+    "bytes": 5453274,
+    "sha256": "3cd5708b94738d1ba24cdbba73db6b8dbb49d31c903b3c2c69346c87f669a1d6"
+  }
+]
