@@ -17,7 +17,7 @@
   {
     "command": "npm run check:auth",
     "exit_code": 2,
-    "log": "docs/evidence/workflow-update/check:auth.log"
+    "log": "docs/evidence/workflow-update/check-auth.log"
   },
   {
     "command": "npm run build",
