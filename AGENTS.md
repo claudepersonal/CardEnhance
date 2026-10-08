@@ -3,11 +3,10 @@
 ## Project Structure & Module Organization
 
 CardEnhance is a TypeScript/Vite web app for sports-card detection, OCR,
-restoration, and export. UI code is in `src/`; server and database code is in
-`server/` and `migrations/`; automation lives in `scripts/`. Keep ML assets
-under `models/`, public files under `public/`, and generated run data under
-`data/runs/`. Do not commit `.env*`, `data/secrets.json`, model downloads, or
-generated build output.
+restoration, and export. UI code is in `src/`; server/database code is in
+`server/` and `migrations/`; automation is in `scripts/`. Keep ML assets in
+`models/`, public files in `public/`, and generated runs in `data/runs/`. Do
+not commit `.env*`, `data/secrets.json`, model downloads, or build output.
 
 ## Build, Test, and Development Commands
 
@@ -22,35 +21,29 @@ npm run lint           # run ESLint
 npm run build          # production build and database migrations
 ```
 
-Run the focused test first, then `npm run typecheck`, `npm test`, and
-`npm run lint` before handing off a change. Record blocked browser, OCR, model,
-or database checks rather than treating a successful build as full validation.
+Run `npm run typecheck`, `npm test`, and `npm run lint` before handoff. Record
+blocked browser, OCR, model, or database checks; a build is not full validation.
 
 ## Coding Style & Naming Conventions
 
-Use TypeScript, two-space indentation, and the repository's Prettier and ESLint
-configuration. Prefer small functions, explicit input validation, and early
-returns. Use descriptive `camelCase` for variables and functions, `PascalCase`
-for React components, and kebab-case for route and asset filenames. Do not edit
-generated files or migration history by hand unless the task specifically
-requires it.
+Use TypeScript, two-space indentation, Prettier, and ESLint. Prefer small
+functions, explicit validation, and early returns. Use `camelCase` for
+variables/functions, `PascalCase` for React components, and kebab-case for
+route and asset names. Do not hand-edit generated files or migration history.
 
 ## Testing, Commits, and Pull Requests
 
-Add or update a `scripts/*.test.mjs` test for behavior changed in scripts. For
-UI or API changes, include the relevant typecheck/lint/test results and a
-screenshot or request/response evidence when applicable. Recent history uses
-short conventional messages such as `fix: ...` and `feat: ...`; follow that
-style. Keep commits focused. Pull requests should explain the user-facing
-change, validation performed, required secrets or migrations, and remaining
-limitations.
+Add or update `scripts/*.test.mjs` tests for changed script behavior. For UI or
+API work, include check results plus screenshot or request/response evidence.
+Use short conventional commits such as `fix: ...` and `feat: ...`. Pull
+requests explain the change, validation, required secrets/migrations, and limits.
 
 ## Secrets and Coordination
 
-Use the connected 1Password Developer Environment `AI` as the approved secret
-source for Codex tasks (including `OPENAI_API_KEY`). Keep runtime values such
-as database URLs and auth secrets in approved environment settings or
-1Password; never place values in source, logs, or pull requests.
+Local Codex CLI uses the connected 1Password `AI` Environment; cloud jobs load
+the same environment through 1Password Workload Identity. Use the same branch
+and commands locally and in cloud tasks. Keep database and auth values in
+1Password or approved environment settings—never source, logs, or pull requests.
 
 ## Codex task-boundary board
 
