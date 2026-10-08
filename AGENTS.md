@@ -10,7 +10,7 @@ not commit `.env*`, `data/secrets.json`, model downloads, or build output.
 
 ## Build, Test, and Development Commands
 
-Use the committed npm lockfile:
+Use Node.js 22 or newer and the committed npm lockfile:
 
 ```sh
 npm ci                 # install locked dependencies
