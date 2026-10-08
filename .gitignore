@@ -18,4 +18,5 @@ yolo11n.pt
 .grok
 .vercel
 .node_modules.lock
-AGENTS.md
+.codex/coordination/*
+!.codex/coordination/project.yaml

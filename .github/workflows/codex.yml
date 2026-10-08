@@ -1,0 +1,99 @@
+name: Codex coding task
+
+on:
+  workflow_dispatch:
+    inputs:
+      task:
+        description: Task to implement and validate
+        required: true
+        type: string
+        default: >-
+          Fix parser/retry issues and allow full-frame card scans.
+          Validate the exported model at the application's exact threshold,
+          separately label Ultralytics metrics at its optimal F1 threshold,
+          complete browser verification and an independent card benchmark,
+          and prepare a draft pull request with model weights, review controls,
+          formula results, and reproducible validation records.
+
+permissions:
+  contents: read
+
+concurrency:
+  group: codex-coding-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  codex:
+    name: Implement and validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          lfs: true
+          persist-credentials: true
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install system dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y build-essential
+      - name: Install Python dependencies
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          if [[ -f requirements.txt ]]; then
+            python -m pip install -r requirements.txt
+          fi
+      - name: Prepare report directory
+        run: mkdir -p "$RUNNER_TEMP/codex-results"
+      - name: Run Codex
+        id: codex
+        uses: openai/codex-action@v1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          sandbox: danger-full-access
+          safety-strategy: drop-sudo
+          output-file: ${{ runner.temp }}/codex-results/report.md
+          prompt: |
+            Implement this task:
+            ${{ inputs.task }}
+
+            Read and follow the repository's AGENTS.md instructions.
+            Discover dependency installation, test, build, and validation commands from the repository. Install necessary dependencies.
+
+            Treat earlier test counts and review conclusions as unverified.
+            Run the relevant checks and record actual results, including lint warnings and any checks that could not be completed.
+
+            Validate model precision and recall at the application's exact confidence threshold. Label optimal-F1 metrics separately.
+            Use repository-relative paths instead of old scratch paths.
+            Hash actual model files, never directories.
+
+            Complete browser verification and the independent benchmark when the required data and runtime are available. Document missing prerequisites without claiming those checks passed.
+
+            Commit the changes on a new branch, push it, and create a draft pull request with GH_TOKEN. Include model weights, review controls, formula results, and reproducible validation records.
+            Verify the remote commit and model hashes against the tested files. Report the PR URL and any unresolved work.
+      - name: Upload results and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-results-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            ${{ runner.temp }}/codex-results/
+            models/card-det/
+            docs/evidence/
