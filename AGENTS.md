@@ -42,9 +42,16 @@ requests explain the change, validation, required secrets/migrations, and limits
 
 The cloud Codex job targets the dedicated 1Password `CardEnhance Codex`
 Environment. Add only `OPENAI_API_KEY` there; its Workload Identity must be
-connected before dispatch. Local Codex CLI authentication is separate: check
-it with `op plugin inspect codex`. An MCP connection alone does not authenticate
-the CLI or GitHub Actions. Keep secrets out of source, logs, and pull requests.
+connected before dispatch. On Windows, authenticate the local CLI separately:
+
+```powershell
+op signin
+$env:OPENAI_API_KEY = 'op://<vault>/<item>/<field>'
+op run -- codex.exe
+```
+
+Use a 1Password secret reference, never a plaintext key. `op run` does not
+create GitHub Workload Identity. Keep secrets out of source, logs, and PRs.
 
 ## Codex task-boundary board
 
