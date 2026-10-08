@@ -40,10 +40,11 @@ requests explain the change, validation, required secrets/migrations, and limits
 
 ## Secrets and Coordination
 
-Local Codex CLI uses the connected 1Password `AI` Environment; cloud jobs load
-the same environment through 1Password Workload Identity. Use the same branch
-and commands locally and in cloud tasks. Keep database and auth values in
-1Password or approved environment settings—never source, logs, or pull requests.
+The cloud Codex job targets the dedicated 1Password `CardEnhance Codex`
+Environment. Add only `OPENAI_API_KEY` there; its Workload Identity must be
+connected before dispatch. Local Codex CLI authentication is separate: check
+it with `op plugin inspect codex`. An MCP connection alone does not authenticate
+the CLI or GitHub Actions. Keep secrets out of source, logs, and pull requests.
 
 ## Codex task-boundary board
 
