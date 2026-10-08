@@ -2,11 +2,11 @@
 
 ## Project Structure & Module Organization
 
-CardEnhance is a TypeScript/Vite web app for sports-card detection, OCR,
-restoration, and export. UI code is in `src/`; server/database code is in
-`server/` and `migrations/`; automation is in `scripts/`. Keep ML assets in
-`models/`, public files in `public/`, and generated runs in `data/runs/`. Do
-not commit `.env*`, `data/secrets.json`, model downloads, or build output.
+CardEnhance is a TypeScript/Vite sports-card app. UI code is in `src/`;
+server/database code is in `server/` and `migrations/`; automation is in
+`scripts/`. Keep ML assets in `models/`, public files in `public/`, and
+generated runs in `data/runs/`. Do not commit `.env*`, `data/secrets.json`,
+model downloads, or build output.
 
 ## Build, Test, and Development Commands
 
@@ -22,7 +22,7 @@ npm run build          # production build and database migrations
 ```
 
 Run `npm run typecheck`, `npm test`, and `npm run lint` before handoff. Record
-blocked browser, OCR, model, or database checks; a build is not full validation.
+blocked browser, OCR, model, or database checks.
 
 ## Coding Style & Naming Conventions
 
@@ -40,9 +40,10 @@ requests explain the change, validation, required secrets/migrations, and limits
 
 ## Secrets and Coordination
 
-The cloud Codex job targets the dedicated 1Password `CardEnhance Codex`
-Environment. Add only `OPENAI_API_KEY` there; its Workload Identity must be
-connected before dispatch. On Windows, authenticate the local CLI separately:
+The cloud Codex job reads `OPENAI_API_KEY` from the `CardEnhance CI` vault
+through a read-only 1Password service account. Its token lives in the GitHub
+Actions secret `OP_SERVICE_ACCOUNT_TOKEN` and in the `API Keys` vault for
+recovery. On Windows, authenticate the local CLI separately:
 
 ```powershell
 op signin
@@ -50,8 +51,9 @@ $env:OPENAI_API_KEY = 'op://<vault>/<item>/<field>'
 op run -- codex.exe
 ```
 
-Use a 1Password secret reference, never a plaintext key. `op run` does not
-create GitHub Workload Identity. Keep secrets out of source, logs, and PRs.
+Use a 1Password secret reference, never a plaintext key. The local `op run`
+session and GitHub service account are separate. Keep secrets out of source,
+logs, and PRs.
 
 ## Codex task-boundary board
 
