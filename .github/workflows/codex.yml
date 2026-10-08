@@ -30,6 +30,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write
     defaults:
       run:
         shell: bash
@@ -58,6 +59,14 @@ jobs:
           fi
       - name: Prepare report directory
         run: mkdir -p "$RUNNER_TEMP/codex-results"
+      - name: Load 1Password Environment
+        uses: 1password/load-secrets-action@v5
+        with:
+          export-env: true
+        env:
+          OP_WORKLOAD_ID: ${{ vars.OP_WORKLOAD_ID }}
+          OP_ENVIRONMENT_ID: ${{ vars.OP_ENVIRONMENT_ID }}
+          OP_INTEGRATION_KEY: ${{ secrets.OP_INTEGRATION_KEY }}
       - name: Run Codex
         id: codex
         uses: openai/codex-action@v1
