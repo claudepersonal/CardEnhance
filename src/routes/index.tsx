@@ -100,7 +100,7 @@ function Dashboard() {
               <div key={stage.label} className="pipeline-stage">
                 <stage.icon size={18} />
                 <span>{stage.label}</span>
-                {i < pipeline.length - 1 && <span className="arrow">\u2192</span>}
+                {i < pipeline.length - 1 && <span className="arrow">→</span>}
               </div>
             ))}
           </div>
