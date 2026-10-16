@@ -20,6 +20,8 @@ Rules:
 - side: front if art dominates, back if bio/legal text.
 - rawText: all letters you can actually read.
 Null if not printed. Do not invent.`;
+const REQUEST_TIMEOUT_MS = 15_000;
+const MAX_JPEG_BASE64_LENGTH = 240_000;
 
 function asSide(value: unknown): CardSide {
   return value === "front" || value === "back" ? value : "unknown";
@@ -79,58 +81,72 @@ function parseVisionJson(text: string): Partial<CardIdentity> | null {
   }
 }
 
+async function fetchVisionJson(url: string, init: RequestInit) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    const body = (await response.json()) as { choices?: { message?: { content?: string } }[] };
+    return { response, body };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export const readTradingCard = createServerFn({ method: "POST" })
   .validator((data: { jpeg: string }) => {
     if (!data || typeof data.jpeg !== "string" || data.jpeg.length < 32) {
       throw new Error("Missing image");
     }
-    if (data.jpeg.length > 240_000) {
-      throw new Error("Image too large for vision OCR");
+    if (data.jpeg.length > MAX_JPEG_BASE64_LENGTH || !/^[A-Za-z0-9+/=]+$/.test(data.jpeg)) {
+      throw new Error("Invalid image");
     }
     return data;
   })
   .handler(async ({ data }): Promise<VisionOcrResult> => {
-    const { applySecrets } = await import("./connectors/secrets-io");
-    await applySecrets();
-    const apiKey = process.env.XAI_API_KEY;
-    if (!apiKey) return { ok: false, error: "unavailable" };
+    try {
+      const { applySecrets } = await import("./connectors/secrets-io");
+      await applySecrets();
+      const apiKey = process.env.XAI_API_KEY;
+      if (!apiKey) return { ok: false, error: "unavailable" };
 
-    const res = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "grok-4.5",
-        max_tokens: 420,
-        temperature: 0,
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "user",
-            content: [
-              {
-                type: "image_url",
-                image_url: { url: `data:image/jpeg;base64,${data.jpeg}`, detail: "high" },
-              },
-              { type: "text", text: PROMPT },
-            ],
-          },
-        ],
-      }),
-    });
+      const { response, body } = await fetchVisionJson("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: "grok-4.5",
+          max_tokens: 420,
+          temperature: 0,
+          response_format: { type: "json_object" },
+          messages: [
+            {
+              role: "user",
+              content: [
+                {
+                  type: "image_url",
+                  image_url: { url: `data:image/jpeg;base64,${data.jpeg}`, detail: "high" },
+                },
+                { type: "text", text: PROMPT },
+              ],
+            },
+          ],
+        }),
+      });
 
-    if (!res.ok) {
-      return { ok: false, error: `vision ${res.status}` };
+      if (!response.ok) return { ok: false, error: `vision ${response.status}` };
+      const text = body.choices?.[0]?.message?.content ?? "";
+      const identity = parseVisionJson(text);
+      if (!identity || (!identity.player && !identity.manufacturer && !identity.year)) {
+        return { ok: false, error: "empty" };
+      }
+      return { ok: true, identity };
+    } catch (error) {
+      return {
+        ok: false,
+        error: error instanceof Error && error.name === "AbortError" ? "timeout" : "unavailable",
+      };
     }
-    const body = (await res.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    const text = body.choices?.[0]?.message?.content ?? "";
-    const identity = parseVisionJson(text);
-    if (!identity || (!identity.player && !identity.manufacturer && !identity.year)) {
-      return { ok: false, error: "empty" };
-    }
-    return { ok: true, identity };
   });
