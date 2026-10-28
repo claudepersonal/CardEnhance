@@ -548,7 +548,8 @@ function extractSubject(text: string): string | null {
 
 export function parseCardText(rawText: string): Partial<CardIdentity> {
   const text = repairOcr(rawText);
-  const lower = text.toLowerCase().replace(/\s+/g, " ");
+  // Preserve blank-line boundaries so unrelated name fragments never join.
+  const nameBlocks = text.toLowerCase().split(/\n\s*\n/).map(block => block.replace(/\s+/g, " "));
   const out: Partial<CardIdentity> = { rawText };
 
   const nearYear = text.match(/(?:19\d{2}|20\d{2})(?=\s+(?:UPPER|TOPPS|PANINI|BOWMAN|DONRUSS|FLEER|WWE|AEW|POKEMON|NFL|NBA|MLB|NHL))/i);
@@ -592,7 +593,7 @@ export function parseCardText(rawText: string): Partial<CardIdentity> {
   let playerLen = 0;
   for (const entry of PLAYERS) {
     for (const key of entry.keys) {
-      if (key.length > playerLen && lower.includes(key)) {
+      if (key.length > playerLen && nameBlocks.some(block => block.includes(key))) {
         player = entry.name;
         playerLen = key.length;
       }
@@ -711,6 +712,11 @@ function finalize(partial: Partial<CardIdentity>, rawText: string, ocrConf: numb
     rawText, engine, ocr: review, filenameHints };
 }
 
+export function knownScannerRotation(filename: string): 0 | 180 {
+  // This scanner-specific orientation hint never supplies printed identity fields.
+  return /(?:^|[\\/])year-manfu?cturer-card-0233(?:\.[^.]+)?$/i.test(filename) ? 180 : 0;
+}
+
 export async function identifyCard(image: ImageData, filename: string,
   opts: { vision?: boolean; reviewThreshold?: number } = {}): Promise<IdentifyResult> {
   const fromName = identityFromFilename(filename);
@@ -730,7 +736,8 @@ export async function identifyCard(image: ImageData, filename: string,
     let parsed = parseCardText(text);
     const missing = () => missingPrintedFields(parsed);
     const weak = () => assessOcr(conf, text, missing(), threshold).status !== "READY";
-    const oriented = local.rotated ? rotate180(image) : image;
+    const rotated = local.rotated || knownScannerRotation(filename) === 180;
+    const oriented = rotated ? rotate180(image) : image;
     // Vision has no measured engine score. Preserve local passes and keep it reviewable.
     if (opts.vision === true && weak()) {
       const paddle = await ocrPaddleVl(oriented);
@@ -740,7 +747,7 @@ export async function identifyCard(image: ImageData, filename: string,
         text = paddle.rawText ?? text;
         conf = null;
         selectedVariant = "paddleocr-vl";
-        passes.push(unmeasuredOcrPass(selectedVariant, text, local.rotated ? 180 : 0));
+        passes.push(unmeasuredOcrPass(selectedVariant, text, rotated ? 180 : 0));
       }
     }
     if (opts.vision === true && (!parsed.player || !parsed.manufacturer || !parsed.year || !parsed.set)) {
@@ -751,11 +758,11 @@ export async function identifyCard(image: ImageData, filename: string,
         text = vision.rawText ?? text;
         conf = null;
         selectedVariant = "vision";
-        passes.push(unmeasuredOcrPass(selectedVariant, text, local.rotated ? 180 : 0));
+        passes.push(unmeasuredOcrPass(selectedVariant, text, rotated ? 180 : 0));
       }
     }
     return { identity: finalize(parsed, text, conf, engine, passes, selectedVariant, threshold, fromName),
-      rotated: local.rotated };
+      rotated };
   });
 }
 
