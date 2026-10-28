@@ -72,3 +72,9 @@ test('unmeasured fallback transcription is an actual pass with preserved rotatio
   assert.deepEqual(pass,{variant:'vision',text,rotation:180,confidence:null,lines:[{text,confidence:null}]});
   assert.equal(assessOcr(pass.confidence,pass.text,[],80).status,'MISSING');
 });
+
+test('slightly staggered text boxes retain left-to-right order within one visual row', () => {
+  const boxes = [{x:180,y:22,h:22},{x:10,y:25,h:22},{x:5,y:85,h:22}];
+  assert.deepEqual(readingOrder(boxes),[boxes[1],boxes[0],boxes[2]]);
+  assert.equal(boxes[0].y,22);
+});
