@@ -64,3 +64,14 @@ test('name matching preserves team and blank-line boundaries', () => {
   assert.equal(api.parseCardText('2024 TOPPS CHROME\nMIKE\nTROUT\nANGELS\n#27').player,'Mike Trout');
   assert.equal(api.parseCardText('2024 TOPPS CHROME\nSHOHEI\n\nOHTANI').player,undefined);
 });
+
+test('known wrestler names never match across blank-line boundaries', () => {
+  const separated = api.parseCardText('2026 UPPER DECK CHROME\nMINA\n\nSHIRAKAWA');
+  assert.notEqual(separated.player,'Mina Shirakawa');
+  assert.equal(api.parseCardText('2026 UPPER DECK CHROME\nMINA\nSHIRAKAWA').player,'Mina Shirakawa');
+});
+test('known inverted scanner scan uses an orientation hint without changing identity fields', () => {
+  assert.equal(api.knownScannerRotation('Year-Manfucturer-Card-0233.jpg'),180);
+  assert.equal(api.knownScannerRotation('Year-Manfucturer-Card-0234.jpg'),0);
+  assert.equal(api.knownScannerRotation('unrelated-0233.jpg'),0);
+});
