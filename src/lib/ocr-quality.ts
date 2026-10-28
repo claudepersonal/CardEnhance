@@ -75,8 +75,21 @@ export function selectOcrPass(passes: OcrPass[], printedFieldScore: (text: strin
   return best;
 }
 
-export function readingOrder<T extends {x:number;y:number}>(boxes: readonly T[]): T[] {
-  return [...boxes].sort((a,b) => a.y-b.y || a.x-b.x);
+export function readingOrder<T extends {x:number;y:number;h?:number}>(boxes: readonly T[]): T[] {
+  // Group nearby top coordinates into visual rows before sorting left-to-right.
+  // Anchoring to the first box in each row avoids a non-transitive comparator.
+  const sorted = [...boxes].sort((a,b) => a.y-b.y || a.x-b.x);
+  const rows: { top: number; height: number; items: T[] }[] = [];
+  for (const box of sorted) {
+    const row = rows[rows.length - 1];
+    const height = box.h && box.h > 0 ? box.h : 12;
+    if (row && box.y - row.top <= Math.max(2, Math.min(row.height, height) * 0.35)) {
+      row.items.push(box);
+    } else {
+      rows.push({ top: box.y, height, items: [box] });
+    }
+  }
+  return rows.flatMap(row => row.items.sort((a,b) => a.x-b.x || a.y-b.y));
 }
 
 export async function attemptOcrRead<T>(read: () => Promise<T>, recover: () => Promise<void>): Promise<T | null> {
