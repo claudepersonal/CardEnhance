@@ -3,7 +3,7 @@ import JSZip from "jszip";
 import { expandFiles } from "./pipeline";
 import { validateUploadedImage } from "./validate";
 import { detectCards, rectifyCard, type CardDetection } from "./detect-sheet";
-import { identifyCard, identityLabel, missingPrintedFields } from "./identify";
+import { identifyCard, identityLabel, missingPrintedFields, parseCardText, isOcrPassReady } from "./identify";
 import { saveProcessedCard } from "./connectors/persist";
 import { notifyCardProcessed } from "./connectors/notify";
 import { putR2Object } from "./connectors/r2";
@@ -26,7 +26,7 @@ import {
   thumbnail,
 } from "./image-ops";
 import type { CardIdentity } from "./types";
-import { assessOcr } from "./ocr-quality";
+import { assessOcr, selectOcrPass } from "./ocr-quality";
 import { identityQuery, lookupCardPrices, type PriceQuote } from "./prices";
 
 export type Stage =
@@ -278,9 +278,22 @@ export const useBatch = create<Store>((set, get) => ({
     set({ settings, updatedAt: Date.now(), cards: get().cards.map(card => {
       const identity = card.identity;
       if (!identity?.ocr) return card;
-      const missing = missingPrintedFields(identity);
-      return { ...card, identity: { ...identity, ocr: { ...identity.ocr,
-        ...assessOcr(identity.ocr.confidence, identity.rawText, missing, settings.reviewThreshold) } } };
+      // A new threshold may make another stored OCR pass eligible.
+      // Vision identities are unmeasured and must not be silently replaced.
+      const selected = (identity.engine === "ocr" || identity.engine === "paddleocr")
+        ? selectOcrPass(identity.ocr.passes,
+            text => 4 - missingPrintedFields(parseCardText(text)).length,
+            pass => isOcrPassReady(pass, settings.reviewThreshold))
+        : null;
+      const parsed = selected ? parseCardText(selected.text) : identity;
+      const rawText = selected?.text ?? identity.rawText;
+      const confidence = selected ? selected.confidence : identity.ocr.confidence;
+      const missing = missingPrintedFields(parsed);
+      return { ...card, identity: { ...identity, ...(selected ? parsed : {}),
+        rawText, confidence: (confidence ?? 0) / 100,
+        ocr: { ...identity.ocr,
+          ...assessOcr(confidence, rawText, missing, settings.reviewThreshold),
+          selectedVariant: selected?.variant ?? identity.ocr.selectedVariant } } };
     }) });
   },
   dropPhase: "idle",
